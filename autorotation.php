@@ -28,9 +28,9 @@ if ( ! isset($_REQUEST['view_name']) ) {
   $available_views = get_available_views();
 
   $view_found = 0;
-  
+
   $user['view_name'] = $_REQUEST['view_name'];
-  
+
   // I am not quite sure at this point whether I should cache view info so
   // for now I will have to do this
   foreach ( $available_views as $id => $view ) {
@@ -42,7 +42,7 @@ if ( ! isset($_REQUEST['view_name']) ) {
   }
   unset($available_views);
 
-  if ( $view_found == 0 || count($view['items']) == 0 ) {
+  if ( $view_found == 0 || (is_countable($view['items']) ? count($view['items']) : 0) == 0 ) {
       die ("<font color=red size=4>There are no graphs in view you supplied or view does not exist.</font>");
   }
 
@@ -71,9 +71,9 @@ if ( ! isset($_REQUEST['view_name']) ) {
 
   // Let's get all View graph elements
   $view_elements = get_view_graph_elements($view);
-  
+
   # The title of the next graph, with some logic to set the next to the first if we run out of graphs
-  if ($id < (count($view_elements) -1)) {
+  if ($id < ((is_countable($view_elements) ? count($view_elements) : 0) -1)) {
 	  $nextid = $id+1;
   } else {
 	  $nextid = 0;

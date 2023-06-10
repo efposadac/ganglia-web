@@ -2,7 +2,8 @@
 include_once("./eval_conf.php");
 include_once("./functions.php");
 include_once("./global.php");
-include_once("./dwoo/dwooAutoload.php");
+// include_once("./dwoo/dwooAutoload.php");
+require __DIR__ . '/vendor/autoload.php';
 
 if (! checkAccess(GangliaAcl::ALL_VIEWS, GangliaAcl::VIEW, $conf))
   die("You do not have access to view views.");
@@ -25,11 +26,11 @@ if (isset($_GET['vn']) && !is_proper_view_name($_GET['vn'])) {
 
 $viewList = new ViewList();
 
-$dwoo = new Dwoo($conf['dwoo_compiled_dir'], $conf['dwoo_cache_dir']);
-$tpl = new Dwoo_Template_File( template("view_content.tpl") );
-$data = new Dwoo_Data();
+$dwoo = new Dwoo\Core($conf['dwoo_compiled_dir'], $conf['dwoo_cache_dir']);
+$tpl = new Dwoo\Template\File( template("view_content.tpl") );
+$data = new Dwoo\Data();
 
-$size = isset($clustergraphsize) ? $clustergraphsize : 'default';
+$size = $clustergraphsize ?? 'default';
 // set to 'default' to preserve old behavior
 if ($size == 'medium')
   $size = 'default';
@@ -54,7 +55,7 @@ if ($view != NULL) {
 
 if (isset($view_items)) {
   $data->assign("view_items", $view_items);
-  $data->assign("number_of_view_items", count($view_items));
+  $data->assign("number_of_view_items", is_countable($view_items) ? count($view_items) : 0);
   if ($view['common_y_axis'] != 0)
     $data->assign("common_y_axis", 1);
 }
@@ -63,6 +64,6 @@ $data->assign('GRAPH_BASE_ID', $GRAPH_BASE_ID);
 $data->assign('SHOW_EVENTS_BASE_ID', $SHOW_EVENTS_BASE_ID);
 $data->assign('graph_engine', $conf['graph_engine']);
 $data->assign('flot_graph', isset($conf['flot_graph']) ? true : null);
-$dwoo->output($tpl, $data);
+echo $dwoo->get($tpl, $data);
 
 ?>

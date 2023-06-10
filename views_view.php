@@ -45,14 +45,13 @@ if (isset($_GET['create_view'])) {
                 $view_name .
                 " already exists.";
     } else {
-      $empty_view = array ("view_name" => $view_name,
-                           "items" => array());
+      $empty_view = ["view_name" => $view_name, "items" => []];
       $view_filename = viewFileName($view_name);
       if (pathinfo($view_filename, PATHINFO_DIRNAME) != $conf['views_dir']) {
         die('Invalid path detected');
       }
 
-      $json = json_encode($empty_view);
+      $json = json_encode($empty_view, JSON_THROW_ON_ERROR);
       if (file_put_contents($view_filename,
                             json_prettyprint($json)) === FALSE) {
         $output = "<strong>Alert:</strong>" .
@@ -120,18 +119,12 @@ if (isset($_GET['add_to_view'])) {
       # Check if we are adding an aggregate graph
       if (isset($_GET['aggregate'])) {
 	foreach ($_GET['mreg'] as $key => $value)
-	  $metric_regex_array[] = array("regex" => $value);
+	  $metric_regex_array[] = ["regex" => $value];
 
 	foreach ($_GET['hreg'] as $key => $value)
-	  $host_regex_array[] = array("regex" => $value);
+	  $host_regex_array[] = ["regex" => $value];
 
-	$item_array = array("aggregate_graph" => "true",
-			    "metric_regex" => $metric_regex_array,
-			    "host_regex" => $host_regex_array,
-			    "graph_type" => stripslashes($_GET['gtype']),
-			    "vertical_label" => stripslashes($_GET['vl']),
-			    "title" => $_GET['title'],
-			    "glegend" => $_GET['glegend']);
+	$item_array = ["aggregate_graph" => "true", "metric_regex" => $metric_regex_array, "host_regex" => $host_regex_array, "graph_type" => stripslashes($_GET['gtype']), "vertical_label" => stripslashes($_GET['vl']), "title" => $_GET['title'], "glegend" => $_GET['glegend']];
 
 	if (isset($_GET['x']) && is_numeric($_GET['x'])) {
 	  $item_array["upper_limit"] = $_GET['x'];
@@ -162,8 +155,7 @@ if (isset($_GET['add_to_view'])) {
 	unset($item_array);
       } else {
 	if ($_GET['type'] == "metric") {
-          $items = array("hostname" => $_GET['host_name'],
-                         "metric" => $_GET['metric_name']);
+          $items = ["hostname" => $_GET['host_name'], "metric" => $_GET['metric_name']];
 	  if (isset($_GET['vertical_label']))
             $items["vertical_label"] = stripslashes($_GET['vertical_label']);
 	  if (isset($_GET['title']))
@@ -177,14 +169,13 @@ if (isset($_GET['add_to_view'])) {
 
 	  $view['items'][] = $items;
 	} else
-	  $view['items'][] = array("hostname" => $_GET['host_name'],
-                                   "graph" => $_GET['metric_name']);
+	  $view['items'][] = ["hostname" => $_GET['host_name'], "graph" => $_GET['metric_name']];
       }
 
       $view_filename = $view['file_name'];
       // Remove the file_name attribute, it is not stored in the view defn.
       unset($view['file_name']);
-      $json = json_encode($view);
+      $json = json_encode($view, JSON_THROW_ON_ERROR);
       if (file_put_contents($view_filename,
                             json_prettyprint($json)) === FALSE ) {
         $output = "<strong>Alert:</strong>" .
@@ -207,13 +198,12 @@ if (isset($_GET['add_to_view'])) {
 }
 
 class ViewTreeNode {
-  private $name = NULL;
   private $data = NULL;
-  private $children = NULL;
+  private ?array $children = NULL;
   private $parent = NULL;
 
-  public function __construct($name) {
-    $this->name = $name;
+  public function __construct(private $name)
+  {
   }
 
   public function hasChild($name) {
@@ -232,7 +222,7 @@ class ViewTreeNode {
 
   public function addChild($node) {
     if ($this->children == NULL)
-      $this->children = array();
+      $this->children = [];
     $this->children[$node->getName()] = $node;
     $node->setParent($this);
     return $node;
@@ -369,8 +359,8 @@ if (isset($_GET['views_menu'])) {
   exit(0);
 }
 
-$tpl = new Dwoo_Template_File( template("views_view.tpl") );
-$data = new Dwoo_Data();
+$tpl = new Dwoo\Template\File( template("views_view.tpl") );
+$data = new Dwoo\Data();
 $data->assign("range", $range);
 
 if (isset($conf['ad-hoc-views']) &&
@@ -381,7 +371,7 @@ if (isset($conf['ad-hoc-views']) &&
 
 // Pop up a warning message if there are no available views
 // (Disable temporarily, otherwise we can't create views)
-if (count($viewList->getViews()) == -1 && !$is_ad_hoc) {
+if ((is_countable($viewList->getViews()) ? count($viewList->getViews()) : 0) == -1 && !$is_ad_hoc) {
   $error_msg = '
     <div class="ui-widget">
       <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;">
@@ -392,7 +382,7 @@ if (count($viewList->getViews()) == -1 && !$is_ad_hoc) {
     </div>';
 }
 
-$size = isset($clustergraphsize) ? $clustergraphsize : 'default';
+$size = $clustergraphsize ?? 'default';
 
 // set to 'default' to preserve old behavior
 if ($size == 'medium')
@@ -414,7 +404,9 @@ if ($is_ad_hoc) {
   $data->assign("ad_hoc_view", true);
   $data->assign("ad_hoc_view_json", rawurlencode($_GET['ad-hoc-view']));
   $ad_hoc_view_json = json_decode(heuristic_urldecode($_GET['ad-hoc-view']),
-				  true);
+				  true,
+      512,
+      JSON_THROW_ON_ERROR);
   $view_items = getViewItems($ad_hoc_view_json, $range, $cs, $ce);
 } else {
   $view = $viewList->getView($view_name);
@@ -427,13 +419,13 @@ if ($is_ad_hoc) {
 
 if (isset($view_items)) {
   $data->assign("view_items", $view_items);
-  $data->assign("number_of_view_items", count($view_items));
+  $data->assign("number_of_view_items", is_countable($view_items) ? count($view_items) : 0);
 }
 
 $data->assign('GRAPH_BASE_ID', $GRAPH_BASE_ID);
 $data->assign('SHOW_EVENTS_BASE_ID', $SHOW_EVENTS_BASE_ID);
 $data->assign('graph_engine', $conf['graph_engine']);
 $data->assign('flot_graph', isset($conf['flot_graph']) ? true : null);
-$dwoo->output($tpl, $data);
+echo $dwoo->get($tpl, $data);
 
 ?>

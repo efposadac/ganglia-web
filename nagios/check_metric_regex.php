@@ -21,7 +21,7 @@
 #  ?hreg=apache\tomcat&checks=disk_rootfs,more,10:disk_tmp,more,20
 #
 ##########################################################################################
-$conf['gweb_root'] = dirname(dirname(__FILE__));
+$conf['gweb_root'] = dirname(__FILE__, 2);
 
 include_once $conf['gweb_root'] . "/eval_conf.php";
 include_once $conf['gweb_root'] . "/functions.php";
@@ -79,8 +79,8 @@ if ( ! is_array( $metrics ) ) {
 # Get a list of all hosts
 $ganglia_hosts_array = array_keys($metrics);
 
-$results_ok = array();
-$results_notok = array();
+$results_ok = [];
+$results_notok = [];
 
 # Loop through all hosts looking for matches
 foreach ( $ganglia_hosts_array as $index => $hostname ) {

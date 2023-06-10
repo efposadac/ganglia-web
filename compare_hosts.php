@@ -1,17 +1,17 @@
 <?php
 include_once("./global.php");
 
-$tpl = new Dwoo_Template_File( template("compare_hosts.tpl") );
-$data = new Dwoo_Data();
+$tpl = new Dwoo\Template\File( template("compare_hosts.tpl") );
+$data = new Dwoo\Data();
 $data->assign("range", $range);
 
-$size = isset($clustergraphsize) ? $clustergraphsize : 'default';
+$size = $clustergraphsize ?? 'default';
 //set to 'default' to preserve old behavior
 $size = $size == 'medium' ? 'default' : $size; 
 
 retrieve_metrics_cache();
 
-$matches = array();
+$matches = [];
 if (array_key_exists('hreg', $_GET)) {
   foreach ( $_GET['hreg'] as $key => $query ) {
     if ($query != '') {
@@ -19,7 +19,7 @@ if (array_key_exists('hreg', $_GET)) {
         if ( preg_match("/$query/i", $host_name ) ) {
           // We can have same hostname in multiple clusters
           foreach ($index_array['cluster'][$host_name] as $clustername) {
-            $matches[] = array ("hostname" => $host_name, "clustername" => $clustername);
+            $matches[] = ["hostname" => $host_name, "clustername" => $clustername];
           }
         }
       }
@@ -29,8 +29,8 @@ if (array_key_exists('hreg', $_GET)) {
 
 #print "<PRE>";print_r($index_array['metrics']);
 
-$host_metrics = array();
-$host_cluster = array();
+$host_metrics = [];
+$host_cluster = [];
 foreach ( $matches as $index => $match ) {
   $hostname = $match['hostname'];
   $host_cluster[] = $match['hostname'] . "|" . $match['clustername'];
@@ -48,7 +48,7 @@ $host_list = join(",", $host_cluster);
 ksort($host_metrics);
 #print "<PRE>";print_r($host_metrics);
 
-$hmetrics = array();
+$hmetrics = [];
 foreach ( $host_metrics as $name => $value )
   $hmetrics[] = $name;
 
@@ -66,7 +66,7 @@ if ( isset($_GET['hreg']) ) {
   $data->assign("hreg_arg", "");
 }
 
-$size = isset($clustergraphsize) ? $clustergraphsize : 'default';
+$size = $clustergraphsize ?? 'default';
 //set to 'default' to preserve old behavior
 $size = $size == 'medium' ? 'default' : $size; 
 
@@ -91,6 +91,6 @@ $data->assign("number_of_metrics", count($hmetrics));
 $data->assign('GRAPH_BASE_ID', $GRAPH_BASE_ID);
 $data->assign('SHOW_EVENTS_BASE_ID', $SHOW_EVENTS_BASE_ID);
 
-$dwoo->output($tpl, $data);
+echo $dwoo->get($tpl, $data);
 
 ?>

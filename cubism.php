@@ -70,8 +70,8 @@ var ganglia = context.gangliaWeb( {
 
 $graph_config = build_aggregate_graph_config ("line", 
                                        1, 
-                                       array($hreg),
-                                       array($mreg),
+                                       [$hreg],
+                                       [$mreg],
                                        "hide",
                                        false);
 
@@ -79,7 +79,7 @@ $graph_config = build_aggregate_graph_config ("line",
 var load_metrics = [
 <?php
 
-$items = array();
+$items = [];
 
 foreach ( $graph_config['series'] as $index => $item ) {
 

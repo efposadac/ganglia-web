@@ -24,19 +24,15 @@
 * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
 * @license    http://framework.zend.com/license/new-bsd     New BSD License
 */
-class Zend_Exception extends Exception
+class Zend_Exception extends Exception implements \Stringable
 {
-    /**
-     * @var null|Exception
-     */
-    private $_previous = null;
+    private ?\Exception $_previous = null;
 
     /**
      * Construct the exception
      *
      * @param  string $msg
      * @param  int $code
-     * @param  Exception $previous
      * @return void
      */
     public function __construct($msg = '', $code = 0, Exception $previous = null)
@@ -71,7 +67,7 @@ class Zend_Exception extends Exception
      *
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         if (version_compare(PHP_VERSION, '5.3.0', '<')) {
             if (null !== ($e = $this->getPrevious())) {

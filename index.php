@@ -1,13 +1,15 @@
 <?php
+require __DIR__ . '/vendor/autoload.php';
 include_once "./eval_conf.php";
 # ATD - function.php must be included before get_context.php.  It defines some needed functions.
 include_once "./functions.php";
 include_once "./get_context.php";
 include_once "./ganglia.php";
 include_once "./get_ganglia.php";
-include_once "./dwoo/dwooAutoload.php";
 
 $resource = GangliaAcl::ALL_CLUSTERS;
+print("CONTEXT: $context");
+
 if( $context == "grid" ) {
   $resource = $grid;
 } else if ( $context == "cluster" || $context == "host" ) {
@@ -21,7 +23,7 @@ if( ! checkAccess( $resource, GangliaAcl::VIEW, $conf ) ) {
 
 try
    {
-      $dwoo = new Dwoo($conf['dwoo_compiled_dir'], $conf['dwoo_cache_dir']);
+      $dwoo = new Dwoo\Core($conf['dwoo_compiled_dir'], $conf['dwoo_cache_dir']);
    }
 catch (Exception $e)
    {
@@ -34,16 +36,16 @@ catch (Exception $e)
 $GHOME = ".";
 
 if ($context == "meta" or $context == "control") {
-      $title = "$self ${conf['meta_designator']} Report";
+      $title = "$self {$conf['meta_designator']} Report";
       include_once "./header.php";
       include_once "./meta_view.php";
 } else if ($context == "tree") {
-      $title = "$self ${conf['meta_designator']} Tree";
+      $title = "$self {$conf['meta_designator']} Tree";
       include_once "./header.php";
       include_once "./grid_tree.php";
 } else if ($context == "cluster" or $context == "cluster-summary") {
-      if (preg_match('/cluster/i', $clustername))
-         $title = "$clustername Report";
+      if (preg_match('/cluster/i', $clustername)){
+         $title = "$clustername Report";}
       else
          $title = "$clustername Cluster Report";
 

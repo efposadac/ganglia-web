@@ -54,9 +54,9 @@ if ( isset($_GET['view_name'])) {
 
     // Let's find the view definition
     foreach ( $available_views as $view_id => $view ) {
-  
+
      if ( $view['view_name'] == $view_name ) {
-  
+
       $view_elements = get_view_graph_elements($view);
 
       $range_args = "";
@@ -65,7 +65,7 @@ if ( isset($_GET['view_name'])) {
       if ( isset($_GET['cs']) && isset($_GET['ce']) ) 
 	    $range_args .= "&cs=" . rawurlencode($_GET['cs']) . "&ce=" . rawurlencode($_GET['ce']);
 
-      if ( count($view_elements) != 0 ) {
+      if ( (is_countable($view_elements) ? count($view_elements) : 0) != 0 ) {
 	foreach ( $view_elements as $id => $element ) {
 	  print "
 	  <A HREF=\"./graph_all_periods.php?mobile=1&" . $element['graph_args'] ."&z=mobile\">
@@ -74,9 +74,9 @@ if ( isset($_GET['view_name'])) {
       } else {
 	print "No graphs defined for this view. Please add some";
       }
-	
-	
-  
+
+
+
      }  // end of if ( $view['view_name'] == $view_name
     } // end of foreach ( $views as $view_id 
 
@@ -132,18 +132,18 @@ if ( isset($_GET['show_cluster_metrics'])) {
     // First we find out what the default (site-wide) reports are then look
     // for host specific included or excluded reports
     ///////////////////////////////////////////////////////////////////////////
-    $default_reports = array("included_reports" => array(), "excluded_reports" => array());
+    $default_reports = ["included_reports" => [], "excluded_reports" => []];
     if ( is_file($conf['conf_dir'] . "/default.json") ) {
-      $default_reports = array_merge($default_reports, json_decode(file_get_contents($conf['conf_dir'] . "/default.json"), TRUE));
+      $default_reports = array_merge($default_reports, json_decode(file_get_contents($conf['conf_dir'] . "/default.json"), TRUE, 512, JSON_THROW_ON_ERROR));
     }
     
     $cluster_file = $conf['conf_dir'] . "/cluster_" . preg_replace('/[^a-zA-Z0-9_-]/', '', $clustername) . ".json";
     if ( pathinfo( $cluster_file, PATHINFO_DIRNAME ) != $conf['conf_dir'] ) {
       die('Invalid path detected');
     }
-    $override_reports = array("included_reports" => array(), "excluded_reports" => array());
+    $override_reports = ["included_reports" => [], "excluded_reports" => []];
     if ( is_file($cluster_file) ) {
-      $override_reports = array_merge($override_reports, json_decode(file_get_contents($cluster_file), TRUE));
+      $override_reports = array_merge($override_reports, json_decode(file_get_contents($cluster_file), TRUE, 512, JSON_THROW_ON_ERROR));
     }
     
     # Merge arrays
@@ -190,10 +190,10 @@ if ( isset($_GET['show_host_metrics'])) {
 	for ( $i = 0 ; $i < 5 ; $i++ ) {
 	   $context_ranges[] = $my_ranges[$i]; 
 	}
-      
+
 	$range_menu = "";
 	$range = $_GET['r'];
-      
+
 	foreach ($context_ranges as $v) {
 	   $url=rawurlencode($v);
 	   if ($v == $range) {
@@ -208,40 +208,40 @@ if ( isset($_GET['show_host_metrics'])) {
 	</ul>
       </div><!-- /navbar -->
     </div><!-- /header -->
-  
+
     <div data-role="content">
 <?php
     $graph_args = "h=".rawurlencode($hostname)."&c=".rawurlencode($clustername)."&r=".rawurlencode($range);
-    
+
     ///////////////////////////////////////////////////////////////////////////
     // Let's find out what optional reports are included
     // First we find out what the default (site-wide) reports are then look
     // for host specific included or excluded reports
     ///////////////////////////////////////////////////////////////////////////
-    $default_reports = array("included_reports" => array(), "excluded_reports" => array());
+    $default_reports = ["included_reports" => [], "excluded_reports" => []];
     if ( is_file($conf['conf_dir'] . "/default.json") ) {
-      $default_reports = array_merge($default_reports, json_decode(file_get_contents($conf['conf_dir'] . "/default.json"), TRUE));
+      $default_reports = array_merge($default_reports, json_decode(file_get_contents($conf['conf_dir'] . "/default.json"), TRUE, 512, JSON_THROW_ON_ERROR));
     }
-    
+
     $host_file = $conf['conf_dir'] . "/host_" . preg_replace('/[^a-zA-Z0-9_-]/', '', $hostname) . ".json";
     if ( pathinfo( $host_file, PATHINFO_DIRNAME ) != $conf['conf_dir'] ) {
       die('Invalid path detected');
     }
-    $override_reports = array("included_reports" => array(), "excluded_reports" => array());
+    $override_reports = ["included_reports" => [], "excluded_reports" => []];
     if ( is_file($host_file) ) {
-      $override_reports = array_merge($override_reports, json_decode(file_get_contents($host_file), TRUE));
+      $override_reports = array_merge($override_reports, json_decode(file_get_contents($host_file), TRUE, 512, JSON_THROW_ON_ERROR));
     }
-    
+
     # Merge arrays
     $reports["included_reports"] = array_merge( $default_reports["included_reports"], $override_reports["included_reports"]);
     $reports["excluded_reports"] = array_merge($default_reports["excluded_reports"], $override_reports["excluded_reports"]);
-    
+
     # Remove duplicates
     $reports["included_reports"] = array_unique($reports["included_reports"]);
     $reports["excluded_reports"] = array_unique($reports["excluded_reports"]);
-    
+
     foreach ( $reports["included_reports"] as $index => $report_name ) {
-    
+
       if ( ! in_array( $report_name, $reports["excluded_reports"] ) ) {
 	print "
 	<A HREF=\"./graph_all_periods.php?mobile=1&$graph_args&amp;g=" . $report_name . "&amp;z=large\">
@@ -251,8 +251,8 @@ if ( isset($_GET['show_host_metrics'])) {
     ?>  
 <?php
 
-$g_metrics_group = array();
-$groups = array();
+$g_metrics_group = [];
+$groups = [];
 
 $size = "mobile";
 
@@ -268,7 +268,7 @@ foreach ($metrics as $metric_name => $metric_attributes) {
   else {
     $metric_graphargs = "c=".rawurlencode($clustername)."&amp;h=".rawurlencode($hostname)."&amp;v=".rawurlencode($metric_attributes[VAL])
       ."&amp;m=$metric_name&amp;r=".rawurlencode($range)."&amp;z=$size&amp;jr=$jobrange"
-      ."&amp;js=$jobstart&amp;st=$cluster[LOCALTIME]";
+      ."&amp;js=$jobstart&amp;st=".$cluster['LOCALTIME'];
     if ($cs)
        $metric_graphargs .= "&amp;cs=" . rawurlencode($cs);
     if ($ce)
@@ -283,7 +283,7 @@ foreach ($metrics as $metric_name => $metric_attributes) {
        $metric_graphargs .= "&amp;ti=$title";
     }
     $g_metrics[$metric_name]['graph'] = $graph_args . "&" . $metric_graphargs;
-    $g_metrics[$metric_name]['description'] = isset($metric_attributes['DESC']) ? $metric_attributes['DESC'] : '';
+    $g_metrics[$metric_name]['description'] = $metric_attributes['DESC'] ?? '';
 
     if ( !isset($metrics[$metric_name]['GROUP']) )
       $group_name = "no group";
@@ -294,7 +294,7 @@ foreach ($metrics as $metric_name => $metric_attributes) {
     if ( ! in_array($group_name, $groups) ) {
       $groups[] = $group_name;
     }
-    
+
     $g_metrics_group[$group_name][] = $metric_name;
  }
 }

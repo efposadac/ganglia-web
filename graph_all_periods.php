@@ -1,11 +1,12 @@
 <?php
+require __DIR__ . '/vendor/autoload.php';
 include_once "./eval_conf.php";
 include_once "./global.php";
 include_once "./functions.php";
-include_once "./dwoo/dwooAutoload.php";
+// include_once "./dwoo/dwooAutoload.php";
 
-$tpl = new Dwoo_Template_File(template("graph_all_periods.tpl"));
-$data = new Dwoo_Data();
+$tpl = new Dwoo\Template\File(template("graph_all_periods.tpl"));
+$data = new Dwoo\Data();
 
 $data->assign("refresh", $conf['default_refresh']);
 $data->assign("conf", $conf);
@@ -26,7 +27,7 @@ $data->assign("standalone",
 // build a query string but drop r and z since those designate time
 // window and size. Also if the get arguments are an array rebuild them.
 // For example with hreg (host regex)
-$ignore_keys_list = array("r", "z", "st", "cs", "ce", "hc");
+$ignore_keys_list = ["r", "z", "st", "cs", "ce", "hc"];
 
 foreach ($_GET as $key => $value) {
   if (!in_array($key, $ignore_keys_list) && !is_array($value))
@@ -42,6 +43,8 @@ foreach ($_GET as $key => $value) {
 // If we are in the mobile mode set the proper graph sizes
 $data->assign("largesize", isset($_GET['mobile']) ? "mobile" : "large");
 $data->assign("xlargesize", isset($_GET['mobile']) ? "mobile" : "xlarge");
+
+print_r($_GET);
 
 // Join all the query_string arguments
 $query_string = join("&amp;", $query_string_array);
@@ -89,7 +92,7 @@ $data->assign("is_aggregate", $is_aggregate);
 
 $graph_actions = NULL;
 if (!isset($_REQUEST['mobile'])) {
-  $graph_actions = array();
+  $graph_actions = [];
   $graph_actions['timeshift'] = !$is_aggregate && !isset($_GET['g']);
   $graph_actions['metric_actions'] = TRUE;
   $graph_actions['decompose'] = $is_aggregate;
@@ -119,5 +122,5 @@ if (!isset($dwoo)) {
   }
 }
 
-$dwoo->output($tpl, $data);
+echo $dwoo->get($tpl, $data);
 ?>

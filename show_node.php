@@ -17,8 +17,8 @@ if (empty($hostname)) {
    return;
 }
 
-$tpl = new Dwoo_Template_File( template("show_node.tpl") );
-$data = new Dwoo_Data();
+$tpl = new Dwoo\Template\File( template("show_node.tpl") );
+$data = new Dwoo\Data();
 $data->assign("extra", template("node_extra.tpl"));
 
 $up = $hosts_up ? 1 : 0;
@@ -31,7 +31,7 @@ $data->assign("name", $hostname);
 
 # Find the host's physical location in the cluster.
 $hostattrs = ($up) ? $hosts_up : $hosts_down;
-list($rack,$rank,$plane) = findlocation($hostattrs);
+[$rack, $rank, $plane] = findlocation($hostattrs);
 $location = ($rack<0) ? "Unknown" : "Rack $rack, Rank $rank, Plane $plane.";
 $data->assign("location", $location);
 
@@ -42,7 +42,7 @@ if(isset($hostattrs['ip'])) {
 }
 
 # The metrics we need for this node.
-$mem_total_gb = $metrics['mem_total']['VAL']/1048576;
+$mem_total_gb = $metrics['mem_total']['VAL']/1_048_576;
 $load_one=$metrics['load_one']['VAL'];
 $load_five=$metrics['load_five']['VAL'];
 $load_fifteen=$metrics['load_fifteen']['VAL'];
@@ -141,5 +141,5 @@ $data->assign("full_host_view", "./?c=$cluster_url&amp;h=$hostname&amp;$get_metr
 # For the reload link.
 $data->assign("self", "./?c=$cluster_url&amp;h=$hostname&amp;p=$physical");
 
-$dwoo->output($tpl, $data);
+echo $dwoo->get($tpl, $data);
 ?>

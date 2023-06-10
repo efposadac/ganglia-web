@@ -6,7 +6,7 @@ if ( !isset($_GET['debug']) ) {
   header("Content-Type: text/json");
 }
 
-$conf['gweb_root'] = dirname(dirname(__FILE__));
+$conf['gweb_root'] = dirname(__FILE__, 2);
 
 include_once $conf['gweb_root'] . "/eval_conf.php";
 include_once $conf['gweb_root'] . "/functions.php";
@@ -84,10 +84,7 @@ if ( $host_found == 1 ) {
 
   $ganglia_units = $metrics[$fqdn][$metric_name]['UNITS'];
 
-  api_return_ok(array(
-      'metric_value' => $metric_value
-    , 'units' => $ganglia_units
-  ));
+  api_return_ok(['metric_value' => $metric_value, 'units' => $ganglia_units]);
 } else {
    api_return_error(htmlentities($metric_name) . " - Hostname info not available. Likely invalid hostname");
 }

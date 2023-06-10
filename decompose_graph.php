@@ -1,7 +1,7 @@
 <?php
 
-$tpl = new Dwoo_Template_File( template("decompose_graph.tpl") );
-$data = new Dwoo_Data();
+$tpl = new Dwoo\Template\File( template("decompose_graph.tpl") );
+$data = new Dwoo\Data();
 $data->assign("range", $range);
 
 $graph_type = "line";
@@ -10,8 +10,8 @@ $line_width = "2";
 
 $user['view_name'] = isset($_GET["vn"]) ? sanitize ($_GET["vn"]) : NULL;
 $user['item_id'] = isset($_GET["item_id"]) ? sanitize ($_GET["item_id"]) : NULL;
-$user['hreg'] = isset($_GET["hreg"]) ? $_GET["hreg"] : NULL;
-$user['mreg'] = isset($_GET["mreg"]) ? $_GET["mreg"] : NULL;
+$user['hreg'] = $_GET["hreg"] ?? NULL;
+$user['mreg'] = $_GET["mreg"] ?? NULL;
 
 #################################################################################
 # Let's check if we are decomposing a composite graph from a view
@@ -63,7 +63,7 @@ if ( $user['view_name'] and $user['item_id'] ) {
 
 }
 
-$size = isset($clustergraphsize) ? $clustergraphsize : 'default';
+$size = $clustergraphsize ?? 'default';
 $size = $size == 'medium' ? 'default' : $size; //set to 'default' to preserve old behavior
 
 $additional_host_img_css_classes = "";
@@ -72,7 +72,7 @@ if ( isset($conf['zoom_support']) && $conf['zoom_support'] === true )
 
 $data->assign("additional_host_img_css_classes", $additional_host_img_css_classes);
 
-$items = array();
+$items = [];
 
 $graphargs = "";
 if ($cs)
@@ -82,12 +82,10 @@ if ($ce)
 
 foreach ( $graph_config['series'] as $index => $item ) {
    $args = "h=" . $item['hostname'] . "&c=" . $item['clustername'] . "&m=" . $item['metric'];
-   $items[] = array ( "title" => $item['hostname'] . " " . $item['metric'],
-          "url_args" => $args . $graphargs . "&r=" . $range
-   );
+   $items[] = ["title" => $item['hostname'] . " " . $item['metric'], "url_args" => $args . $graphargs . "&r=" . $range];
 
 }
 
 $data->assign("items", $items);
 $data->assign("number_of_items", count($items));
-$dwoo->output($tpl, $data);
+echo $dwoo->get($tpl, $data);

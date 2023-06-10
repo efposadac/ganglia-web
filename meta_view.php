@@ -1,6 +1,6 @@
 <?php
-$tpl = new Dwoo_Template_File( template("meta_view.tpl") );
-$data = new Dwoo_Data();
+$tpl = new Dwoo\Template\File( template("meta_view.tpl") );
+$data = new Dwoo\Data();
 
 discover_filters();
 if ( !empty($filter_defs) ) {
@@ -18,7 +18,7 @@ $source_names = array_keys($grid);
 # For the standard meta view still display all the hosts.
 
 if ( $context == "control" ) {
-       srand((double)microtime()*1000000);
+       mt_srand((double)microtime()*1_000_000);
        shuffle($source_names);
        $subset = array_slice($source_names, 0, abs($controlroom));
        $source_names = $subset;
@@ -37,7 +37,7 @@ foreach( $source_names as $c)
    }
 
 if ($sort == "descending") {
-      $sorted_sources[$self] = 999999999;
+      $sorted_sources[$self] = 999_999_999;
       arsort($sorted_sources);
 } else if ($sort == "by name") { # SORT HACK to keep $self first; see below:
       $sorted_sources["AAAAA.$self"] = $sorted_sources[$self];
@@ -47,20 +47,20 @@ if ($sort == "descending") {
       foreach ($sorted_sources as $source => $val) {
             $sorted_sources[$source] = intval($grid[$source]['HOSTS_UP']);
       }
-      $sorted_sources[$self] = 999999999;
+      $sorted_sources[$self] = 999_999_999;
       arsort($sorted_sources);
 } else if ($sort == "by hosts down") {
       foreach ($sorted_sources as $source => $val) {
             $sorted_sources[$source] = intval($grid[$source]['HOSTS_DOWN']);
       }
-      $sorted_sources[$self] = 999999999;
+      $sorted_sources[$self] = 999_999_999;
       arsort($sorted_sources);
 } else {
       $sorted_sources[$self] = -1;
       asort($sorted_sources);
 }
 
-$sources = array();
+$sources = [];
 
 # Display the sources. The first is ourself, the rest are our children.
 foreach ( $sorted_sources as $source => $val )
@@ -84,7 +84,7 @@ foreach ( $sorted_sources as $source => $val )
                {
                   # Negative control room values means dont display grid summary.
                   if ($controlroom < 0) continue;
-                  $num_sources = count($sorted_sources) - 1;
+                  $num_sources = (is_countable($sorted_sources) ? count($sorted_sources) : 0) - 1;
                   $name = "$self ${conf['meta_designator']} ($num_sources sources)";
                   $graph_url = "me=$sourceurl&amp;$get_metric_string";
                   $url = "./?$get_metric_string";
@@ -111,7 +111,7 @@ foreach ( $sorted_sources as $source => $val )
             $class = "cluster";
          }
 
-      $cpu_num = $m["cpu_num"]['SUM'] ? $m["cpu_num"]['SUM'] : 1;
+      $cpu_num = $m["cpu_num"]['SUM'] ?: 1;
       $cluster_load15 = sprintf("%.0f", ((double) $m["load_fifteen"]['SUM'] / $cpu_num) * 100);
       $cluster_load5 = sprintf("%.0f", ((double) $m["load_five"]['SUM'] / $cpu_num) * 100);
       $cluster_load1 = sprintf("%.0f", ((double) $m["load_one"]['SUM'] / $cpu_num) * 100);
@@ -174,7 +174,7 @@ foreach ( $sorted_sources as $source => $val )
    }
 
 $data->assign("sources", $sources);
-$snap_rows = array();
+$snap_rows = [];
 
 # Show load images.
 if ($conf['show_meta_snapshot']=="yes") {
@@ -208,7 +208,7 @@ if ($conf['show_meta_snapshot']=="yes") {
    # above the image. Not easy with template blocks.
    $cols=5;
    $i = 0;
-   $count=count($names);
+   $count=is_countable($names) ? count($names) : 0;
    while ($i < $count)
       {
          $snapnames = "";
@@ -236,5 +236,5 @@ if ($conf['show_meta_snapshot']=="yes") {
    $data->assign("snap_rows", $snap_rows);
 }
 
-$dwoo->output($tpl, $data);
+echo $dwoo->get($tpl, $data);
 ?>

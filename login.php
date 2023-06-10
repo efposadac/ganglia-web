@@ -4,7 +4,7 @@ require_once 'eval_conf.php';
 if($conf['auth_system'] == 'enabled' && isset($_SERVER['REMOTE_USER']) && !empty($_SERVER['REMOTE_USER']) ){
   $auth = GangliaAuth::getInstance();
   $auth->setAuthCookie($_SERVER['REMOTE_USER']);
-  $redirect_to = isset( $_SERVER['HTTP_REFERER'] ) ? $_SERVER['HTTP_REFERER'] : 'index.php';
+  $redirect_to = $_SERVER['HTTP_REFERER'] ?? 'index.php';
   header("Location: $redirect_to");
   die();
 }

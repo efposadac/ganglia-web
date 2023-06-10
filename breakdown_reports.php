@@ -24,7 +24,7 @@ $(function() {
   require_once('./eval_conf.php');
   require_once('./functions.php');
 
-  $available_metrics = array();
+  $available_metrics = [];
   retrieve_metrics_cache("metric_list");
 
   # If metric_list hash exists we pulled it out of cache. Otherwise

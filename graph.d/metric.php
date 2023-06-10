@@ -6,6 +6,9 @@
 /* Pass in by reference! */
 function graph_metric ( &$rrdtool_graph ) {
 
+    $jobrange = null;
+    $clustername = null;
+    $subtitle_two = null;
     global $conf,
            $context,
            $jobstart,

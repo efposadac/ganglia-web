@@ -15,8 +15,8 @@ function make_metric_cols_menu($metriccols) {
   return $metric_cols_menu;
 }
 
-$tpl = new Dwoo_Template_File( template("host_view.tpl") );
-$data = new Dwoo_Data();
+$tpl = new Dwoo\Template\File( template("host_view.tpl") );
+$data = new Dwoo\Data();
 
 $data->assign("cluster", $user['clustername']);
 $data->assign("may_edit_cluster", checkAccess( $user['clustername'],
@@ -47,6 +47,7 @@ function getOptionalReports($hostname,
                             $graph_engine,
                             $may_edit_views,
                             $default_optional_graph_size) {
+  $reports = [];
   global $GRAPH_BASE_ID;
   global $SHOW_EVENTS_BASE_ID;
 
@@ -71,19 +72,22 @@ function getOptionalReports($hostname,
   // First we find out what the default (site-wide) reports are then look
   // for host specific included or excluded reports
   ///////////////////////////////////////////////////////////////////////////
-  $default_reports = array("included_reports" => array(),
-			   "excluded_reports" => array());
+  $default_reports = ["included_reports" => [], "excluded_reports" => []];
   if ( is_file($conf_dir . "/default.json") ) {
     $default_reports = array_merge(
       $default_reports,
       json_decode(file_get_contents($conf_dir . "/default.json"),
-		  TRUE));
+		  TRUE,
+    512,
+    JSON_THROW_ON_ERROR));
   }
   if ( is_file($conf_dir . "/default_host.json") ) {
     $default_reports = array_merge(
       $default_reports,
       json_decode(file_get_contents($conf_dir . "/default_host.json"),
-		  TRUE));
+		  TRUE,
+    512,
+    JSON_THROW_ON_ERROR));
   }
 
   $cluster_file = $conf_dir .
@@ -91,31 +95,29 @@ function getOptionalReports($hostname,
     str_replace(" ", "_", $clustername) .
     ".json";
 
-  $cluster_override_reports = array("included_reports" => array(),
-				    "excluded_reports" => array());
+  $cluster_override_reports = ["included_reports" => [], "excluded_reports" => []];
 
   if ($optional_cluster_graphs_for_host_view) {
     if (is_file($cluster_file)) {
       $cluster_override_reports = array_merge(
         $cluster_override_reports,
-        json_decode(file_get_contents($cluster_file), TRUE));
+        json_decode(file_get_contents($cluster_file), TRUE, 512, JSON_THROW_ON_ERROR));
     }
   }
 
   $host_file = $conf_dir . "/host_" . $hostname . ".json";
-  $override_reports = array("included_reports" => array(),
-			    "excluded_reports" => array());
+  $override_reports = ["included_reports" => [], "excluded_reports" => []];
   if ( is_file($host_file) ) {
     $override_reports = array_merge(
       $override_reports,
-      json_decode(file_get_contents($host_file), TRUE));
+      json_decode(file_get_contents($host_file), TRUE, 512, JSON_THROW_ON_ERROR));
   } else {
     // If there is no host file, look for a default cluster file
     $cluster_file = $conf_dir . "/cluster_" . $clustername . ".json";
     if ( is_file($cluster_file) ) {
       $override_reports = array_merge(
         $override_reports,
-	json_decode(file_get_contents($cluster_file), TRUE));
+	json_decode(file_get_contents($cluster_file), TRUE, 512, JSON_THROW_ON_ERROR));
     }
   }
 
@@ -177,11 +179,9 @@ function getMetricGroups($metrics,
   global $conf;
 
   $metric_groups_initially_collapsed =
-    isset($conf['metric_groups_initially_collapsed']) ?
-    $conf['metric_groups_initially_collapsed'] : TRUE;
+    $conf['metric_groups_initially_collapsed'] ?? TRUE;
   $remember_open_metric_groups =
-    isset($conf['remember_open_metric_groups']) ?
-    $conf['remember_open_metric_groups'] : TRUE;
+    $conf['remember_open_metric_groups'] ?? TRUE;
 
   $open_groups = NULL;
   if (isset($_GET['metric_group']) && ($_GET['metric_group'] != "")) {
@@ -196,9 +196,9 @@ function getMetricGroups($metrics,
   // Updated definition of currently open metric groups
   $new_open_groups = "";
   $host_metrics = 0;
-  $metrics_group_data = array();
+  $metrics_group_data = [];
 
-  list($metricMap, $metricGroupMap) =
+  [$metricMap, $metricGroupMap] =
     buildMetricMaps($metrics,
 		    $always_timestamp,
 		    $always_constant,
@@ -223,7 +223,7 @@ function getMetricGroups($metrics,
 	$group = "no_group";
       }
 
-      $num_metrics = count($metric_array);
+      $num_metrics = is_countable($metric_array) ? count($metric_array) : 0;
       $metrics_group_data[$group]["group_metric_count"] = $num_metrics;
       $host_metrics += $num_metrics;
       if ($open_groups == NULL) {
@@ -298,7 +298,7 @@ getHostOverViewData($user['hostname'],
 
 # When this node is down, only show data when show_host_data_if_down is True
 if ($hosts_down && !$conf['show_host_data_if_down']) {
-  $dwoo->output($tpl, $data);
+  echo $dwoo->get($tpl, $data);
   return;
 }
 
@@ -306,8 +306,7 @@ $data->assign('columns_dropdown', 1);
 $data->assign("metric_cols_menu", make_metric_cols_menu($conf['metriccols']));
 $data->assign("size_menu", $size_menu);
 
-$size = isset($user['clustergraphsize']) ?
-  $user['clustergraphsize'] : 'default';
+$size = $user['clustergraphsize'] ?? 'default';
 //set to 'default' to preserve old behavior
 $size = ($size == 'medium') ? 'default' : $size;
 
@@ -329,7 +328,7 @@ $cluster_url = rawurlencode($clustername);
 
 $baseGraphArgs = "c=$cluster_url&amp;h=" . $user['hostname']
   . "&amp;r=" . $user['range'] . "&amp;z=$size&amp;jr=$jobrange"
-  . "&amp;js=$jobstart&amp;st=$cluster[LOCALTIME]";
+  . "&amp;js=$jobstart&amp;st=".$cluster['LOCALTIME'];
 if ($user['cs'])
   $baseGraphArgs .= "&amp;cs=" . rawurlencode($user['cs']);
 if ($user['ce'])
@@ -353,5 +352,5 @@ $data->assign('GRAPH_BASE_ID', $GRAPH_BASE_ID);
 $data->assign('SHOW_EVENTS_BASE_ID', $SHOW_EVENTS_BASE_ID);
 $data->assign('TIME_SHIFT_BASE_ID', $TIME_SHIFT_BASE_ID);
 
-$dwoo->output($tpl, $data);
+echo $dwoo->get($tpl, $data);
 ?>

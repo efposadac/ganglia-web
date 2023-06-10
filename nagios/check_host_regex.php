@@ -21,7 +21,7 @@
 #  ?hreg=apache\tomcat&checks=disk_rootfs,totalmore,10:disk_tmp,more,20
 #
 ##########################################################################################
-$conf['gweb_root'] = dirname(dirname(__FILE__));
+$conf['gweb_root'] = dirname(__FILE__, 2);
 
 include_once $conf['gweb_root'] . "/eval_conf.php";
 include_once $conf['gweb_root'] . "/functions.php";
@@ -80,9 +80,9 @@ if ( ! is_array( $metrics ) ) {
 # Get a list of all hosts
 $ganglia_hosts_array = array_keys($metrics);
 
-$results_ok = array();
-$results_notok = array();
-$metric_total_value = array();
+$results_ok = [];
+$results_notok = [];
+$metric_total_value = [];
 
 # Loop through all hosts looking for matches
 foreach ( $ganglia_hosts_array as $index => $hostname ) {
@@ -92,14 +92,14 @@ foreach ( $ganglia_hosts_array as $index => $hostname ) {
 
       # Loop through all the checks
       foreach ( $checks as $index => $check ) {
-   
+
 	 # Separate check into it's pieces
 	 $pieces = explode(",", $check);
 	 $metric_name = $pieces[0];
 	 $operator = $pieces[1];
 	 $critical_value = $pieces[2];
 	 unset($pieces);
-	 
+
 	 # Check for the existence of a metric
 	 if ( isset($metrics[$hostname][$metric_name]['VAL'])  ) {
 	   $metric_value = $metrics[$hostname][$metric_name]['VAL'];
@@ -109,7 +109,7 @@ foreach ( $ganglia_hosts_array as $index => $hostname ) {
 	   }
 	   continue;
 	 }
-	 
+
 	 $ganglia_units = $metrics[$hostname][$metric_name]['UNITS'];
 
      if ( $operator == "totalmore" || $operator == "totalless") {
@@ -122,16 +122,16 @@ foreach ( $ganglia_hosts_array as $index => $hostname ) {
              $metric_total_value[$metric_name]['OPER'] = $operator;
          }
      }else{
-	 
+
          if ( ($operator == "less" && $metric_value > $critical_value) || ( $operator == "more" && $metric_value < $critical_value ) || ( $operator == "equal" && trim($metric_value) != trim($critical_value) ) || ( $operator == "notequal" && trim($metric_value) == trim($critical_value) ) ) {
             $results_ok[] =  "OK " . $hostname . " " . $metric_name . " = " . $metric_value . " " . $ganglia_units;
          } else {
             $results_notok[] =  "CRITICAL " . $hostname . " " . $metric_name . " = ". $metric_value . " " . $ganglia_units;
          }
      }
-     
+
       } // end of foreach ( $checks as $index => $check
-     
+
    } //  end of if ( preg_match("/" . $host_reg 
 
 } // end of foreach ( $ganglia_hosts_array as $index => $hostname ) {

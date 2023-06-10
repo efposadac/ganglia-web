@@ -11,7 +11,7 @@
 // Make timestamp, description and host_regex have been supplied before proceeding
 header("Content-Type: text/plain");
 
-$conf['gweb_root'] = dirname(dirname(__FILE__));
+$conf['gweb_root'] = dirname(__FILE__, 2);
 
 include_once $conf['gweb_root'] . "/eval_conf.php";
 include_once $conf['gweb_root'] . "/functions.php";
@@ -61,14 +61,7 @@ switch ( $_REQUEST['action'] ) {
     // Generate a unique event ID. This is so we can reference it later
     $event_id = uniqid();
 
-    $event = array( "event_id" => $event_id, 
-		    "start_time" => $start_time, 
-		    "summary" => sanitize($_REQUEST['summary']),
-		    "grid" => $grid, 
-		    "cluster" => $cluster, 
-		    "host_regex" => $_REQUEST['host_regex'],
-		    "description" => $description
-		    );
+    $event = ["event_id" => $event_id, "start_time" => $start_time, "summary" => sanitize($_REQUEST['summary']), "grid" => $grid, "cluster" => $cluster, "host_regex" => $_REQUEST['host_regex'], "description" => $description];
 
     if ( isset($_REQUEST['end_time']) ) {
         if ( $_REQUEST['end_time'] == "now" )
@@ -109,6 +102,6 @@ switch ( $_REQUEST['action'] ) {
 
 } // end of switch ( $_REQUEST['action'] ) {
 
-print json_encode($message);
+print json_encode($message, JSON_THROW_ON_ERROR);
 
 ?>

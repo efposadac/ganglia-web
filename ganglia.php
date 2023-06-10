@@ -8,7 +8,7 @@
 # information as we need to make the page.
 #
 
-$gweb_root = dirname(__FILE__);
+$gweb_root = __DIR__;
 
 include_once($gweb_root . "/version.php");
 include_once("./global.php");
@@ -20,27 +20,27 @@ $error="";
 $parsetime = 0;
 
 # 2key = "Source Name" / "NAME | AUTHORITY | HOSTS_UP ..." = Value.
-$grid = array();
+$grid = [];
 
 # 1Key = "NAME | LOCALTIME | HOSTS_UP | HOSTS_DOWN" = Value.
-$cluster = array();
+$cluster = [];
 
 # 2Key = "Cluster Name / Host Name" ... Value = Array of Host Attributes
-$hosts_up = array();
+$hosts_up = [];
 # 2Key = "Cluster Name / Host Name" ... Value = Array of Host Attributes
-$hosts_down = array();
+$hosts_down = [];
 
 # Context dependant structure.
-$metrics = array();
+$metrics = [];
 
 # 1Key = "Component" (gmetad | gmond) = Version string
-$version = array();
+$version = [];
 
 # The web frontend version, from conf.php.
 $version["webfrontend"] = $GLOBALS["ganglia_version"];
 
 # Get rrdtool version
-$rrdtool_version = array();
+$rrdtool_version = [];
 exec($conf['rrdtool'], $rrdtool_version);
 $rrdtool_version = explode(" ", $rrdtool_version[0]);
 $rrdtool_version = $rrdtool_version[1];
@@ -49,7 +49,7 @@ $version["rrdtool"] = "$rrdtool_version";
 # The name of our local grid.
 $self = " ";
 
-$index_array = array();
+$index_array = [];
 
 # Returns true if the host is alive. Works for both old and new gmond sources.
 function host_alive($host, $cluster) {
@@ -306,11 +306,11 @@ function start_host ($parser, $tagname, $attrs) {
                } else {
                   $group_array = (array)$attrs['VAL'];
                }
-               $attribarray = array($attrs['NAME'] => $attrs['VAL']);
+               $attribarray = [$attrs['NAME'] => $attrs['VAL']];
                $metrics[$metricname] = array_merge($metrics[$metricname], $attribarray);
                $metrics[$metricname]['GROUP'] = $group_array;
             } else {
-               $attribarray = array($attrs['NAME'] => $attrs['VAL']);
+               $attribarray = [$attrs['NAME'] => $attrs['VAL']];
                $metrics[$metricname] = array_merge($metrics[$metricname], $attribarray);
             }
             break;
@@ -329,6 +329,7 @@ function end_all ($parser, $tagname) {
 
 function Gmetad () {
 
+   $SKIP_GMETAD_CONTEXTS = [];
    global $conf, $error, $parsetime, $clustername, $hostname, $context, $debug;
    
    if ($debug) print "<br/>\n";

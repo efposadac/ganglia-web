@@ -21,7 +21,7 @@
 #  ?host=mytestserver.com&checks=disk_rootfs,more,10:disk_tmp,more,20
 #
 ##########################################################################################
-$conf['gweb_root'] = dirname(dirname(__FILE__));
+$conf['gweb_root'] = dirname(__FILE__, 2);
 
 include_once $conf['gweb_root'] . "/eval_conf.php";
 include_once $conf['gweb_root'] . "/functions.php";
@@ -82,7 +82,7 @@ $host_found = 0;
 
 # Find a FQDN of a supplied server name.
 foreach ( $ganglia_hosts_array as $ganglia_host ) {
-  if ( strpos(  $ganglia_host, $host ) !== false  ) {
+  if ( str_contains(  $ganglia_host, $host )  ) {
     $fqdn = $ganglia_host;
     $host_found = 1;
     break;
@@ -92,9 +92,9 @@ foreach ( $ganglia_hosts_array as $ganglia_host ) {
 # Host has been found in the Ganglia tree
 if ( $host_found == 1 ) {
    
-  $results_ok = array();
-  $results_warn = array();
-  $results_crit = array();
+  $results_ok = [];
+  $results_warn = [];
+  $results_crit = [];
    
   # Loop through all the checks
   foreach ( $checks as $index => $check ) {

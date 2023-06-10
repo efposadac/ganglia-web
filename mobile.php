@@ -36,9 +36,9 @@ dt code, dd code { font-size:1.3em; line-height:150%; }
       $cluster_array[$clustername][] = $hostname;
     }
   }
-  
+
   $cluster_names = array_keys($cluster_array);
-  
+
   $available_views = get_available_views();
 
 ?>
@@ -49,7 +49,7 @@ dt code, dd code { font-size:1.3em; line-height:150%; }
   <div data-role="content">
     Please select a category:<p>
     <ul data-role="listview" data-theme="g">
-      <li><a href="#views">Views</a><span class="ui-li-count"><?php print count($available_views); ?></span></li>
+      <li><a href="#views">Views</a><span class="ui-li-count"><?php print is_countable($available_views) ? count($available_views) : 0; ?></span></li>
       <?php
 	if ( count($cluster_names) == 1) {
            print '<li><a href="#cluster-' . str_replace(" ", "_", $clustername) . '">Clusters</a><span class="ui-li-count">1</span></li>';
@@ -75,7 +75,7 @@ if ( count($cluster_names) > 1 ) {
       <?php
       // List all clusters
       foreach ( $cluster_names as $index => $clustername ) {
-	print '<li><a href="#cluster-' . str_replace(" ", "_", $clustername) . '">' . $clustername . '</a><span class="ui-li-count">' .  count($cluster_array[$clustername]) . '</span></li>';  
+	print '<li><a href="#cluster-' . str_replace(" ", "_", $clustername) . '">' . $clustername . '</a><span class="ui-li-count">' .  (is_countable($cluster_array[$clustername]) ? count($cluster_array[$clustername]) : 0) . '</span></li>';  
       }
       ?>
     </ul>

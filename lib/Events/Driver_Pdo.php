@@ -1,6 +1,6 @@
 <?php
 
-$conf['gweb_root'] = dirname(dirname(dirname(__FILE__)));
+$conf['gweb_root'] = dirname(__FILE__, 3);
 
 include_once $conf['gweb_root'] . "/eval_conf.php";
 include_once $conf['gweb_root'] . "/lib/common_api.php";
@@ -24,7 +24,7 @@ function ganglia_events_add( $event ) {
   $result = $db->exec( $sql );
   $event_id = $db->lastInsertID( 'event_id' );
   $event_id = strval($event_id);
-  $message = array( "status" => "ok", "event_id" => $event_id );
+  $message = ["status" => "ok", "event_id" => $event_id];
   return $message;
   } catch (PDOException $e) {
   api_return_error($e->getMessage());
@@ -42,7 +42,7 @@ function ganglia_events_get( $start = NULL, $end = NULL ) {
   $sql = "SELECT * FROM overlay_events ";
   if ( $start != NULL || $end != NULL ) {
     $sql .= " WHERE ";
-    $clauses = array();
+    $clauses = [];
     if ( $start != NULL ) {
       $clauses[] = "start_time >= " . $db->quote( $start, PDO::PARAM_INT );
     }
@@ -55,7 +55,7 @@ function ganglia_events_get( $start = NULL, $end = NULL ) {
 
   $result = $db->query( $sql );
 
-  $events_array = array();
+  $events_array = [];
   while ( ( $row = $result->fetch(PDO::FETCH_ASSOC) ) ) {
     $events_array[] = $row;
   }
@@ -75,7 +75,7 @@ function ganglia_event_delete( $event_id ) {
   $sql = "DELETE FROM overlay_events WHERE event_id = " . $db->quote( $event_id, PDO::PARAM_INT );
   $result = $db->query( $sql );
 
-  $message = array( "status" => "ok", "event_id" => $event_id );
+  $message = ["status" => "ok", "event_id" => $event_id];
 
   return $message;
   } catch (PDOException $e) {
@@ -93,7 +93,7 @@ function ganglia_event_modify( $event ) {
   try {
   $db = new PDO( $conf['overlay_events_dsn'] );
 
-  $clauses = array();
+  $clauses = [];
 
   if (isset( $event['start_time'] )) {
     if ( $event['start_time'] == "now" ) {
@@ -106,7 +106,7 @@ function ganglia_event_modify( $event ) {
     $clauses[] = "start_time = " . $db->quote( $start_time, PDO::PARAM_INT );
   } // end isset start_time
 
-  foreach(array('cluster', 'description', 'summary', 'grid', 'host_regex') as $k) {
+  foreach(['cluster', 'description', 'summary', 'grid', 'host_regex'] as $k) {
     if (isset( $event[$k] )) {
       $clauses[] = "${k} = " . $db->quote( $event[$k], 'text' );
     }
@@ -119,7 +119,7 @@ function ganglia_event_modify( $event ) {
 
   $sql = "UPDATE overlay_events SET " . implode( ",", $clauses ) . " WHERE event_id = " . $db->quote( $event['event_id'], PDO::PARAM_INT );
   $result = $db->exec( $sql );
-  $message = array( "status" => "ok", "event_id" => $event['event_id'] );
+  $message = ["status" => "ok", "event_id" => $event['event_id']];
   return $message;
   } catch (PDOException $e) {
   api_return_error($e->getMessage());

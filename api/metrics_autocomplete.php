@@ -1,6 +1,6 @@
 <?php
 
-$conf['gweb_root'] = dirname(dirname(__FILE__));
+$conf['gweb_root'] = dirname(__FILE__, 2);
 
 include_once $conf['gweb_root'] . "/eval_conf.php";
 include_once $conf['gweb_root'] . "/lib/common_api.php";
@@ -49,7 +49,7 @@ if ( ! is_array( $metrics ) ) {
 
 if ( isset($_GET['term']) ) {
     $term = $_GET['term'];
-    if (count($metrics)) {
+    if (is_countable($metrics) ? count($metrics) : 0) {
       foreach ($metrics as $firsthost => $bar) {
         foreach ($metrics[$firsthost] as $m => $foo)
           $context_metrics[$m] = $m;
@@ -58,7 +58,7 @@ if ( isset($_GET['term']) ) {
         $context_metrics[] = $r;
     }
     if (is_array($context_metrics)) {
-      $picker_metrics = array();
+      $picker_metrics = [];
       # Find all the optional reports
       if ($handle = opendir($conf['gweb_root'] . '/graph.d')) {
         // If we are using RRDtool reports can be json or PHP suffixes
@@ -79,13 +79,9 @@ if ( isset($_GET['term']) ) {
       $c = 0;
       foreach ($context_metrics as $key) {
         $url = rawurlencode($key);
-        if (stripos($key, $term) !== false) {
+        if (stripos($key, (string) $term) !== false) {
           if ($c > 30) { break; }
-          $picker_metrics[] = array(
-            'value' => $url,
-            'label' => $key,
-            'id' => $key
-          );
+          $picker_metrics[] = ['value' => $url, 'label' => $key, 'id' => $key];
           $c++;
         }
       }

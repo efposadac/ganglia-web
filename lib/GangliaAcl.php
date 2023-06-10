@@ -2,20 +2,20 @@
 require_once 'Zend/Acl.php';
 
 class GangliaAcl extends Zend_Acl {
-  private static $acl;
+  private static ?\GangliaAcl $acl = null;
   
   // resources
-  const ALL_RESOURCES = 'all_resources';
-  const  ALL_CLUSTERS = 'all_clusters';
-  const     ALL_VIEWS = 'all_views';
+  public const ALL_RESOURCES = 'all_resources';
+  public const  ALL_CLUSTERS = 'all_clusters';
+  public const     ALL_VIEWS = 'all_views';
   
   // privileges
-  const          VIEW = 'view';
-  const          EDIT = 'edit';
+  public const          VIEW = 'view';
+  public const          EDIT = 'edit';
   
   // roles
-  const         ADMIN = 'admin';
-  const         GUEST = 'guest';
+  public const         ADMIN = 'admin';
+  public const         GUEST = 'guest';
   
   public static function getInstance() {
     if(is_null(self::$acl)) {

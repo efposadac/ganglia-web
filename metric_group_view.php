@@ -5,7 +5,8 @@ include_once "./functions.php";
 include_once "./get_context.php";
 include_once "./ganglia.php";
 include_once "./get_ganglia.php";
-include_once "./dwoo/dwooAutoload.php";
+// include_once "./dwoo/dwooAutoload.php";
+require __DIR__ . '/vendor/autoload.php';
 
 if (isset($_GET['metric_group']) && ($_GET['metric_group'] != ""))
   $metric_group = $_GET['metric_group'];
@@ -13,7 +14,7 @@ else
   exit(0);
 
 try {
-  $dwoo = new Dwoo($conf['dwoo_compiled_dir'], $conf['dwoo_cache_dir']);
+  $dwoo = new Dwoo\Core($conf['dwoo_compiled_dir'], $conf['dwoo_cache_dir']);
 } catch (Exception $e) {
   print "<H4>There was an error initializing the Dwoo PHP Templating Engine: " .
     $e->getMessage() . 
@@ -21,8 +22,8 @@ try {
   exit;
 }
 
-$tpl = new Dwoo_Template_File(template("metric_group_view.tpl"));
-$data = new Dwoo_Data();
+$tpl = new Dwoo\Template\File(template("metric_group_view.tpl"));
+$data = new Dwoo\Data();
 
 $data->assign("may_edit_views", checkAccess( GangliaAcl::ALL_VIEWS,
 					     GangliaAcl::EDIT,
@@ -42,9 +43,10 @@ function getMetricGroup($metrics,
 			$hostname,
 			$baseGraphArgs,
 			$data) {
+  $group = [];
   global $conf;
 
-  list($metricMap, $metricGroupMap) = 
+  [$metricMap, $metricGroupMap] = 
     buildMetricMaps($metrics,
 		    $always_timestamp,
 		    $always_constant,
@@ -64,7 +66,7 @@ function getMetricGroup($metrics,
   }
 
   $metric_array = $metricGroupMap[$metric_group];
-  $num_metrics = count($metric_array);
+  $num_metrics = is_countable($metric_array) ? count($metric_array) : 0;
 
   if (function_exists("sort_metric_group_metrics")) {
     $metric_array = sort_metric_group_metrics($group, $metric_array);
@@ -89,7 +91,7 @@ function getMetricGroup($metrics,
   $data->assign("g_metrics", $group);
 }
 
-$size = isset($clustergraphsize) ? $clustergraphsize : 'default';
+$size = $clustergraphsize ?? 'default';
 //set to 'default' to preserve old behavior
 $size = ($size == 'medium') ? 'default' : $size; 
 
@@ -105,7 +107,7 @@ $cluster_url = rawurlencode($clustername);
 
 $baseGraphArgs = "c=$cluster_url&amp;h=$hostname"
   . "&amp;r=$range&amp;z=$size&amp;jr=$jobrange"
-  . "&amp;js=$jobstart&amp;st=$cluster[LOCALTIME]";
+  . "&amp;js=$jobstart&amp;st=".$cluster['LOCALTIME'];
 if ($cs)
   $baseGraphArgs .= "&amp;cs=" . rawurlencode($cs);
 if ($ce)
@@ -132,5 +134,5 @@ $data->assign('GRAPH_BASE_ID', $GRAPH_BASE_ID);
 $data->assign('SHOW_EVENTS_BASE_ID', $SHOW_EVENTS_BASE_ID);
 $data->assign('TIME_SHIFT_BASE_ID', $TIME_SHIFT_BASE_ID);
 
-$dwoo->output($tpl, $data);
+echo $dwoo->get($tpl, $data);
 ?>

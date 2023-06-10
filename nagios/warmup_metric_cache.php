@@ -7,7 +7,7 @@
 # ie. every 10-15 seconds to populate the cache. You will find a shell
 # script in this directory which runs this command on a specific schedule
 ###############################################################################
-$conf['gweb_root'] = dirname(dirname(__FILE__));
+$conf['gweb_root'] = dirname(__FILE__, 2);
 
 include_once $conf['gweb_root'] . "/eval_conf.php";
 

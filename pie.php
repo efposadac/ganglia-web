@@ -46,32 +46,32 @@ if (!function_exists('imagegif') and !function_exists('imagepng'))
       echo "No image support in this version of PHP<br>";
    }
 
-class piechart 
+class piechart
 {
     /* {{{ attributes */
-    var $im;
-    var $width, $height;
-    var $data;
-    var $colors;
-    var $angles;
-    var $left=10;
-    var $right=140;
-    var $top=30;
-    var $bottom=10;
-    var $head_top=5;
-    var $head_space=2;
-    var $legend_left=20;
-    var $center_x;
-    var $center_y;
-    var $diameter;
+    public $im;
+    public $width, $height;
+    public $data;
+    public $colors;
+    public $angles;
+    public $left=10;
+    public $right=140;
+    public $top=30;
+    public $bottom=10;
+    public $head_top=5;
+    public $head_space=2;
+    public $legend_left=20;
+    public $center_x;
+    public $center_y;
+    public $diameter;
     /* sum of values */
-    var $sum;
+    public $sum;
     /* font sizes */
-    var $fx, $fy;
-    var $legend_num = "";
+    public $fx, $fy;
+    public $legend_num = "";
     /* }}} */
     /* {{{ constants */
-    var $PI = 3.1415926535897931; 
+    public $PI = 3.1415926535897931; 
     /* }}} */
     /* {{{ roundoff */
     /* 
@@ -103,7 +103,7 @@ class piechart
     function get_xy_factors ($degrees) {
       $x = cos($this->deg2rad($degrees));
       $y = sin($this->deg2rad($degrees));
-      return (array($x, $y));
+      return ([$x, $y]);
     }
     /* }}} */
     /* {{{ init */
@@ -119,7 +119,7 @@ class piechart
     function init ($w, $h, $d) {
       $this->im= ImageCreate($w, $h);
       imagesavealpha($this->im, true);
- 
+
       $this->width = $w;
       $this->height = $h;
       $this->data = $d;
@@ -128,8 +128,8 @@ class piechart
       $this->center_x = intval($this->left + ($this->da_width / 2));
       $this->center_y = intval($this->top + ($this->da_height / 2));
       /* font sizes */
-      $this->fx = array(0, 5,6,7,8,9);
-      $this->fy = array(0, 7,8,10,14,11);
+      $this->fx = [0, 5, 6, 7, 8, 9];
+      $this->fy = [0, 7, 8, 10, 14, 11];
       /* decide the diameter of the pie */
       if ($this->da_height > $this->da_width) {
         $this->diameter = $this->da_width;
@@ -140,7 +140,7 @@ class piechart
       imagefill($this->im, 0, 0, $this->white);
 
       $this->black = ImageColorAllocate($this->im, 0, 0, 0);
-      $n = count($this->data);
+      $n = is_countable($this->data) ? count($this->data) : 0;
       for ($i = 0; $i < $n; $i++) {
         $this->colors[$i] = ImageColorAllocate($this->im, $this->data[$i][2],
 	      $this->data[$i][3],
@@ -203,7 +203,7 @@ $to = 0;
     ** the multilevel data array
     */
     function draw_legends ($fontsize) {
-      $n = count($this->data);
+      $n = is_countable($this->data) ? count($this->data) : 0;
       $x1 = $this->width - $this->right + $this->legend_left;
       $x2 = $x1 + $this->fy[$fontsize];
       for ($i = 0; $i < $n; $i++) {
@@ -239,23 +239,17 @@ $to = 0;
     **
     */
     function draw_heading($head_data) {
-      $n = count($head_data);
+      $n = is_countable($head_data) ? count($head_data) : 0;
       $y = $this->head_top;
       for ($i = 0; $i < $n; $i++) {
 
-      switch($head_data[$i][2]) {
-      case "c":
-      $x = ($this->width - $this->fx[$head_data[$i][1]]
-      * strlen($head_data[$i][0])) / 2;
-      break;
-      case "r": /* uses left margin here... */
-      $x = $this->width - $this->left -
-      ($this->fx[$head_data[$i][1]] * strlen($head_data[$i][0]));
-      break;
-      default:
-      $x = $this->left;
-      break;
-      }
+      $x = match ($head_data[$i][2]) {
+          "c" => ($this->width - $this->fx[$head_data[$i][1]]
+          * strlen($head_data[$i][0])) / 2,
+          "r" => $this->width - $this->left -
+          ($this->fx[$head_data[$i][1]] * strlen($head_data[$i][0])),
+          default => $this->left,
+      };
       ImageString($this->im, $head_data[$i][1], $x, $y, $head_data[$i][0],
       $this->black);
       $y += ($this->fy[$head_data[$i][1]] + $this->head_space);
@@ -276,7 +270,7 @@ $to = 0;
 
       $x; //PHPCS
       $y; //PHPCS
-      $pie_count = count( $angles );
+      $pie_count = is_countable($angles) ? count( $angles ) : 0;
       $PIE_THICKNESS = ($this->diameter * 0.075);
 
       for( $j = ($this->center_y+$PIE_THICKNESS); $j > $this->center_y; $j-- ) {
@@ -303,11 +297,11 @@ $to = 0;
 
         }
       }
-   
+
       for( $from = 0, $p = 0; $p < $pie_count; $p++, $from = $to ) {
 
         $to = $from + $angles[$p];
-        
+
         $color = $colors[$p];
 
         if( $to > 360 )
@@ -330,7 +324,7 @@ $to = 0;
    function display() {
       $this->draw_legends(2);
       #$this->draw_margins();
-      
+
       if (function_exists("imagepng")) {
          header ("Content-type: image/png");
          imagepng ($this->im);
@@ -354,11 +348,11 @@ $to = 0;
    // Converts a hexcode color without a leading "#" into
    // its decimal red, green, blue components.
    function hex2rgb($hex) {
-      
+
          $r = hexdec(substr($hex, 0, 2));
          $g = hexdec(substr($hex, 2, 2));
          $b = hexdec(substr($hex, 4, 2));
-         return array($r, $g, $b);
+         return [$r, $g, $b];
       }
     /* }}} */
 };
@@ -373,21 +367,21 @@ $debug=0;
 // where name is set title, and color is in hex like (ffffff).
 //
 // Special names: title=[graph title], size=[WxH].
-$vals = array();
+$vals = [];
 $pie = new piechart;
 
 foreach($_GET as $key=>$val)
    {
       if ($key == "title")
-            $heads[] = array($val, 4, "c");
+            $heads[] = [$val, 4, "c"];
       elseif ($key == "size")
-            list($w, $h) = explode("x", $val);
+            [$w, $h] = explode("x", $val);
 
       else
          {
-            list($value, $color) = explode(",", $val);
-            list($r, $g, $b) = $pie->hex2rgb($color);
-            $vals[] = array($value, $key, $r, $g, $b);
+            [$value, $color] = explode(",", $val);
+            [$r, $g, $b] = $pie->hex2rgb($color);
+            $vals[] = [$value, $key, $r, $g, $b];
          }
    }
 

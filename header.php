@@ -1,6 +1,8 @@
 <?php
 session_start();
 
+
+
 if (isset($_GET['tz'])) {
   $_SESSION['tz'] = $_GET['tz'];
 }
@@ -48,22 +50,18 @@ function make_cols_menu() {
 }
 
 function make_sort_menu($context, $sort) {
+  $context_sorts = [];
   $sort_menu = "";
   if ($context == "meta" or $context == "cluster") {
-    $context_sorts[] = array("ascending",
-			     "Sort hosts by ascending metric value");
-    $context_sorts[] = array("descending",
-			     "Sort hosts by descending metric value");
-    $context_sorts[] = array("by name",
-			     "Sort hosts by name");
+    $context_sorts[] = ["ascending", "Sort hosts by ascending metric value"];
+    $context_sorts[] = ["descending", "Sort hosts by descending metric value"];
+    $context_sorts[] = ["by name", "Sort hosts by name"];
 
     // Show sort order options for meta context only:
 
     if ($context == "meta") {
-      $context_sorts[] = array("by hosts up",
-			       "Display hosts in UP state first");
-      $context_sorts[] = array("by hosts down",
-			       "Display hosts in DOWN state first");
+      $context_sorts[] = ["by hosts up", "Display hosts in UP state first"];
+      $context_sorts[] = ["by hosts down", "Display hosts in DOWN state first"];
     }
 
     $sort_menu = "Sorted&nbsp;&nbsp;";
@@ -232,7 +230,7 @@ $me = $self . "@";
 array_key_exists($self, $grid) and $me = $me . $grid[$self]['AUTHORITY'];
 if ($initgrid)
    {
-      $gridstack = array();
+      $gridstack = [];
       $gridstack[] = $me;
    }
 else if ($gridwalk=="fwd")
@@ -263,7 +261,7 @@ if ($initgrid or $gridwalk)
       # Use cookie so we dont have to pass gridstack around within this site.
       # Cookie values are automatically urlencoded. Expires in a day.
       if ( !isset($_COOKIE["gs"]) or $_COOKIE["gs"] != $gridstack_str )
-            setcookie("gs", $gridstack_str, time() + 86400, NULL, NULL, true, true);
+            setcookie("gs", $gridstack_str, ['expires' => time() + 86400, 'path' => NULL, 'domain' => NULL, 'secure' => true, 'httponly' => true]);
    }
 
 # Invariant: back pointer is second-to-last element of gridstack. Grid stack
@@ -271,18 +269,18 @@ if ($initgrid or $gridwalk)
 # RFM - The original line caused an error when count($gridstack) = 1. This
 # should fix that.
 $parentgrid = $parentlink = NULL;
-if(count($gridstack) > 1) {
-  list($parentgrid, $parentlink) = explode("@", $gridstack[count($gridstack)-2]);
+if((is_countable($gridstack) ? count($gridstack) : 0) > 1) {
+  [$parentgrid, $parentlink] = explode("@", $gridstack[(is_countable($gridstack) ? count($gridstack) : 0)-2]);
 }
 
-$tpl = new Dwoo_Template_File( template("$header.tpl") );
-$data = new Dwoo_Data();
+$tpl = new Dwoo\Template\File( template("$header.tpl") );
+$data = new Dwoo\Data();
 
 if (isset($_GET["hide-hf"]) &&
     filter_input(INPUT_GET,
 		 "hide-hf",
 		 FILTER_VALIDATE_BOOLEAN,
-		 array("flags" => FILTER_NULL_ON_FAILURE))) {
+		 ["flags" => FILTER_NULL_ON_FAILURE])) {
   $data->assign("hide_header", true);
 }
 
@@ -317,7 +315,7 @@ if ($ce)
     $get_metric_string .= "&amp;ce=" . rawurlencode($ce);
 
 # Store time ranges in javascript header
-$js_time_ranges = array();
+$js_time_ranges = [];
 foreach ($conf['time_ranges'] as $id => $val) {
   $js_time_ranges[] = "rng_" . $id . ": " . $val;
 }
@@ -383,21 +381,15 @@ if ($context == "physical" or $context == "cluster" or $context == 'host') {
   $size_menu = make_size_menu($clustergraphsize, $context);
 }
 
-if (in_array($context, array ("meta",
-			      "cluster",
-			      "cluster-summary",
-			      "host",
-			      "views",
-			      "decompose_graph",
-			      "compare_hosts"))) {
+if (in_array($context, ["meta", "cluster", "cluster-summary", "host", "views", "decompose_graph", "compare_hosts"])) {
   #$tpl->assign("custom_time_head", $calendar_head);
   $data->assign("custom_time_head", "");
 } else {
    $data->assign("custom_time_head", "");
 }
 
-$data->assign("cs", $cs ? $cs : NULL);
-$data->assign("ce", $ce ? $ce : NULL);
+$data->assign("cs", $cs ?: NULL);
+$data->assign("ce", $ce ?: NULL);
 
 if (isset($_SESSION['tz']) && ($_SESSION['tz'] != '')) {
   $data->assign("timezone_option", "browser");
@@ -446,6 +438,6 @@ if (file_exists("./templates/${conf['template_name']}/user_header.tpl"))
 $data->assign('context', $context);
 $data->assign("metric_name", "{$user['metricname']}");
 
-$dwoo->output($tpl, $data);
+echo $dwoo->get($tpl, $data);
 
 ?>

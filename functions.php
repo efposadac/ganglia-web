@@ -7,14 +7,14 @@
 # have been set.
 #
 
-include_once ( dirname(__FILE__) . "/lib/json.php" );
+include_once ( __DIR__ . "/lib/json.php" );
 
 #
 # Load event API driver.
 #
 $driver = ucfirst(strtolower( !isset($conf['overlay_events_provider']) ? "Json" : $conf['overlay_events_provider'] ));
-if (file_exists( dirname(__FILE__) . "/lib/Events/Driver_${driver}.php")) {
-  include_once( dirname(__FILE__) . "/lib/Events/Driver_${driver}.php" );
+if (file_exists( __DIR__ . "/lib/Events/Driver_{$driver}.php")) {
+  include_once( __DIR__ . "/lib/Events/Driver_{$driver}.php" );
 }
 
 #------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ function template ($name) {
 
    global $conf;
 
-   $fn = "./templates/${conf['template_name']}/$name";
+   $fn = "./templates/{$conf['template_name']}/$name";
    $default = "./templates/default/$name";
 
    if (file_exists($fn)) {
@@ -86,7 +86,7 @@ function findlocation($attrs) {
       $n=sscanf($attrs['NAME'], "compute-%d-%d", $rack, $rank);
       $plane=0;
    }
-   return array($rack,$rank,$plane);
+   return [$rack, $rank, $plane];
 }
 
 
@@ -117,7 +117,7 @@ function cluster_min($name, $metrics) {
                $minhost = $host;
             }
       }
-   return array($min, $minhost);
+   return [$min, $minhost];
 }
 
 #------------------------------------------------------------------------------
@@ -130,19 +130,19 @@ function load_image ($scope, $value) {
 
    $scaled_load = $value / $conf['load_scale'];
    if ($scaled_load>1.00) {
-      $image = template("images/${scope}_overloaded.jpg");
+      $image = template("images/{$scope}_overloaded.jpg");
    }
    else if ($scaled_load>=0.75) {
-      $image = template("images/${scope}_75-100.jpg");
+      $image = template("images/{$scope}_75-100.jpg");
    }
    else if ($scaled_load >= 0.50) {
-      $image = template("images/${scope}_50-74.jpg");
+      $image = template("images/{$scope}_50-74.jpg");
    }
    else if ($scaled_load>=0.25) {
-      $image = template("images/${scope}_25-49.jpg");
+      $image = template("images/{$scope}_25-49.jpg");
    }
    else {
-      $image = template("images/${scope}_0-24.jpg");
+      $image = template("images/{$scope}_0-24.jpg");
    }
 
    return $image;
@@ -223,17 +223,17 @@ function find_limits($clustername,
 		     $metrics,
 		     $conf,
 		     $rrd_options) {
-  if (!count($metrics))
-    return array(0, 0);
+  if (!(is_countable($metrics) ? count($metrics) : 0))
+    return [0, 0];
 
   $firsthost = key($metrics);
 
   if (array_key_exists($metricname, $metrics[$firsthost])) {
     if ($metrics[$firsthost][$metricname]['TYPE'] == "string"
         or $metrics[$firsthost][$metricname]['SLOPE'] == "zero")
-      return array(0,0);
+      return [0, 0];
   } else {
-    return array(0,0);
+    return [0, 0];
   }
 
   $max = 0;
@@ -242,9 +242,9 @@ function find_limits($clustername,
     $target = $conf['graphite_prefix'] .
       $clustername . ".[a-zA-Z0-9]*." . $metricname . ".sum";
     $raw_highestMax = file_get_contents($conf['graphite_url_base'] . "?target=highestMax(" . $target . ",1)&from=" . $start . "&until=" . $end . "&format=json");
-    $highestMax = json_decode($raw_highestMax, TRUE);
+    $highestMax = json_decode($raw_highestMax, TRUE, 512, JSON_THROW_ON_ERROR);
     $highestMaxDatapoints = $highestMax[0]['datapoints'];
-    $maxdatapoints = array();
+    $maxdatapoints = [];
     foreach ($highestMaxDatapoints as $datapoint) {
       array_push($maxdatapoints, $datapoint[0]);
     }
@@ -256,9 +256,7 @@ function find_limits($clustername,
       if (file_exists($rrd_file)) {
 	if (extension_loaded('rrd')) {
 	  $values = rrd_fetch($rrd_file,
-			      array("--start", $start,
-				    "--end", $end,
-				    "AVERAGE"));
+			      ["--start", $start, "--end", $end, "AVERAGE"]);
 
 	  $values = (array_filter(array_values($values['data']['sum']),
 				  'is_finite'));
@@ -270,7 +268,7 @@ function find_limits($clustername,
 	    "DEF:limits='$rrd_dir/$metricname.rrd':'sum':AVERAGE ".
 	    "PRINT:limits:MAX:%.2lf ".
 	    "PRINT:limits:MIN:%.2lf";
-	  $out = array();
+	  $out = [];
 	  exec($command, $out);
 	  if (isset($out[1])) {
 	    $thismax = $out[1];
@@ -293,7 +291,7 @@ function find_limits($clustername,
       }
     }
   }
-  return array($min, $max);
+  return [$min, $max];
 }
 
 #------------------------------------------------------------------------------
@@ -306,9 +304,9 @@ function find_avg($clustername, $hostname, $metricname) {
     $avg = 0;
 
     if ($hostname)
-        $sum_dir = "${conf['rrds']}/$clustername/$hostname";
+        $sum_dir = "{$conf['rrds']}/$clustername/$hostname";
     else
-        $sum_dir = "${conf['rrds']}/$clustername/__SummaryInfo__";
+        $sum_dir = "{$conf['rrds']}/$clustername/__SummaryInfo__";
     
     # Confirm that sum_dir exists:
     if ( is_dir($sum_dir) ) {
@@ -406,11 +404,12 @@ function strip_domainname( $hostname ) {
 function file_to_hash($filename, $sep) {
 
 
+  $params = [];
   $lines = file($filename, FILE_IGNORE_NEW_LINES);
 
   foreach ($lines as $line)
   {
-    list($k, $v) = explode($sep, rtrim($line));
+    [$k, $v] = explode($sep, rtrim($line));
     $params[$k] = $v;
   }
 
@@ -423,11 +422,12 @@ function file_to_hash($filename, $sep) {
 function file_to_hash_multi($filename, $sep) {
 
 
+  $params = [];
   $lines = file($filename);
 
   foreach ($lines as $line)
   {
-    list($k, $v) = explode($sep, rtrim($line));
+    [$k, $v] = explode($sep, rtrim($line));
     $params[$k][] = $v;
   }
 
@@ -438,8 +438,8 @@ function file_to_hash_multi($filename, $sep) {
 # Obtain a list of distinct values from an array of arrays
 function hash_get_distinct_values($h) {
 
-  $values = array();
-  $values_done = array();
+  $values = [];
+  $values_done = [];
   foreach($h as $k => $v)
   {
     if($values_done[$v] != "x")
@@ -451,7 +451,7 @@ function hash_get_distinct_values($h) {
   return $values;
 }
 
-$filter_defs = array();
+$filter_defs = [];
 
 #------------------------------------------------------------------------------
 # Scan $conf['filter_dir'] and populate $filter_defs
@@ -465,7 +465,7 @@ function discover_filters() {
 
   if(!is_dir($conf['filter_dir']))
   {
-    error_log("discover_filters(): not a directory: ${conf['filter_dir']}");
+    error_log("discover_filters(): not a directory: {$conf['filter_dir']}");
     return;
   }
 
@@ -475,7 +475,7 @@ function discover_filters() {
       if(!is_dir($filter_conf_filename))
       {
         # Parse the file contents
-        $full_filename = "${conf['filter_dir']}/$filter_conf_filename";
+        $full_filename = "{$conf['filter_dir']}/$filter_conf_filename";
         $filter_params = file_to_hash($full_filename, '=');
         $filter_shortname = $filter_params["shortname"];
         $filter_type = $filter_params["type"];
@@ -511,7 +511,7 @@ function filter_init() {
       return;
    }
 
-   $filter_permit_list = array();
+   $filter_permit_list = [];
    $filter_count = 0;
 
    foreach($choose_filter as $filter_shortname => $filter_choice)
@@ -622,8 +622,8 @@ class ViewList {
 
 function getViewItems($view, $range, $cs, $ce) {
   $view_elements = get_view_graph_elements($view);
-  $view_items = array();
-  if (count($view_elements) != 0) {
+  $view_items = [];
+  if ((is_countable($view_elements) ? count($view_elements) : 0) != 0) {
     $custom_time_args = "";
     if ($cs)
       $custom_time_args .= "&cs=" . rawurlencode($cs);
@@ -632,15 +632,11 @@ function getViewItems($view, $range, $cs, $ce) {
 
     foreach ($view_elements as $element) {
       $canBeDecomposed = isset($element['aggregate_graph']) ||
-	((strpos($element['graph_args'], 'vn=') !== FALSE) &&
-	 (strpos($element['graph_args'], 'item_id=') !== FALSE));
+	((str_contains($element['graph_args'], 'vn=')) &&
+	 (str_contains($element['graph_args'], 'item_id=')));
       $view_items[] =
-	array("legend" => isset($element['hostname']) ?
-	      $element['hostname'] : "Aggregate graph",
-	      "url_args" => $element['graph_args'] .
-	      "&r=" . $range . $custom_time_args,
-	      "aggregate_graph" => isset($element['aggregate_graph']) ? 1 : 0,
-	      "canBeDecomposed" => $canBeDecomposed ? 1 : 0);
+	["legend" => $element['hostname'] ?? "Aggregate graph", "url_args" => $element['graph_args'] .
+	      "&r=" . $range . $custom_time_args, "aggregate_graph" => isset($element['aggregate_graph']) ? 1 : 0, "canBeDecomposed" => $canBeDecomposed ? 1 : 0];
     }
   }
   return $view_items;
@@ -650,6 +646,7 @@ function getViewItems($view, $range, $cs, $ce) {
 // Get all the available views
 ///////////////////////////////////////////////////////////////////////////////
 function get_available_views() {
+  $name = [];
   global $conf;
 
   /* -----------------------------------------------------------------------
@@ -657,7 +654,7 @@ function get_available_views() {
   anything that matches view_*.json. Read them all and build a available_views
   array
   ----------------------------------------------------------------------- */
-  $available_views = array();
+  $available_views = [];
 
   if ($handle = opendir($conf['views_dir'])) {
     while (false !== ($file = readdir($handle))) {
@@ -668,25 +665,18 @@ function get_available_views() {
 	       $view_config_file . ". Please check permissions");
 	}
 
-	$view = json_decode(file_get_contents($view_config_file), TRUE);
+	$view = json_decode(file_get_contents($view_config_file), TRUE, 512, JSON_THROW_ON_ERROR);
 	// Check whether view type has been specified ie. regex.
 	// If not it's standard view
 	$view_type =
-	  isset($view['view_type']) ? $view['view_type'] : "standard";
-	$default_size = isset($view['default_size']) ?
-	  $view['default_size'] : $conf['default_view_graph_size'];
+	  $view['view_type'] ?? "standard";
+	$default_size = $view['default_size'] ?? $conf['default_view_graph_size'];
 	$view_parent =
-	  isset($view['parent']) ? $view['parent'] : NULL;
+	  $view['parent'] ?? NULL;
 	$common_y_axis =
-	  isset($view['common_y_axis']) ? $view['common_y_axis'] : 0;
+	  $view['common_y_axis'] ?? 0;
 
-	$available_views[] = array ("file_name" => $view_config_file,
-				    "view_name" => $view['view_name'],
-				    "default_size" => $default_size,
-				    "items" => $view['items'],
-				    "view_type" => $view_type,
-				    "parent" => $view_parent,
-				    "common_y_axis" => $common_y_axis);
+	$available_views[] = ["file_name" => $view_config_file, "view_name" => $view['view_name'], "default_size" => $default_size, "items" => $view['items'], "view_type" => $view_type, "parent" => $view_parent, "common_y_axis" => $common_y_axis];
 	unset($view);
       }
     }
@@ -713,7 +703,7 @@ function get_view_graph_elements($view) {
 
   retrieve_metrics_cache();
 
-  $view_elements = array();
+  $view_elements = [];
 
   // set the default size from the view or global config
   if ( isset($conf['default_view_graph_size']) ) {
@@ -728,8 +718,8 @@ function get_view_graph_elements($view) {
   switch ( $view['view_type'] ) {
   case "standard":
     // Does view have any items/graphs defined
-    if ( count($view['items']) == 0 ) {
-      continue;
+    if ( (is_countable($view['items']) ? count($view['items']) : 0) == 0 ) {
+      break;
       // print "No graphs defined for this view. Please add some";
     } else {
       // Loop through graph items
@@ -760,7 +750,7 @@ function get_view_graph_elements($view) {
 
 	  // If graph type is not specified default to line graph
 	  if (isset($item['graph_type']) &&
-	      in_array($item['graph_type'], array('line', 'stack')))
+	      in_array($item['graph_type'], ['line', 'stack']))
 	    $graph_args_array[] = "gtype=" . $item['graph_type'];
 	  else
 	    $graph_args_array[] = "gtype=line";
@@ -792,10 +782,8 @@ function get_view_graph_elements($view) {
 
 	  $graph_args_array[] = "aggregate=1";
 	  $view_elements[] =
-	    array("graph_args" => join("&", $graph_args_array),
-		  "aggregate_graph" => 1,
-		  "name" => isset($item['title']) && $item['title'] != "" ?
-		  $item['title'] : $mreg[0] . " Aggregate graph");
+	    ["graph_args" => join("&", $graph_args_array), "aggregate_graph" => 1, "name" => isset($item['title']) && $item['title'] != "" ?
+ 		  $item['title'] : $mreg[0] . " Aggregate graph"];
 
 	  unset($graph_args_array);
 
@@ -806,7 +794,7 @@ function get_view_graph_elements($view) {
           $graph_args_array[] = "item_id=" . $item['item_id'];
 
 	  $view_elements[] =
-	    array("graph_args" => join("&", $graph_args_array));
+	    ["graph_args" => join("&", $graph_args_array)];
           unset($graph_args_array);
 
 	  // It's standard metric graph
@@ -902,10 +890,7 @@ function get_view_graph_elements($view) {
 	    $graph_args_array[] = "c=" . urlencode($cluster);
 
 	    $view_elements[] =
-	      array("graph_args" => $metric_suffix . "&" . join("&", $graph_args_array),
-		    "hostname" => $host_name,
-		    "cluster" => $cluster,
-		    "name" => $name);
+	      ["graph_args" => $metric_suffix . "&" . join("&", $graph_args_array), "hostname" => $host_name, "cluster" => $cluster, "name" => $name];
 
 	    unset($graph_args_array);
 	  }
@@ -1110,7 +1095,7 @@ function json_prettyprint($json) {
 function ganglia_cache_metrics() {
     global $conf, $index_array, $hosts, $grid, $clusters, $debug, $metrics;
 
-    require dirname(__FILE__) . '/lib/cache.php';
+    require __DIR__ . '/lib/cache.php';
 } // end function ganglia_cache_metrics
 
 
@@ -1125,11 +1110,14 @@ function build_aggregate_graph_config ($graph_type,
                                        $exclude_host_from_legend_label = false,
                                        $sortit = true) {
 
+  $graph_config = [];
+  $host_matches = [];
+  $metric_matches = [];
   global $conf, $index_array, $hosts, $grid, $clusters, $debug, $metrics;
 
   retrieve_metrics_cache();
 
-  $color_count = count($conf['graph_colors']);
+  $color_count = is_countable($conf['graph_colors']) ? count($conf['graph_colors']) : 0;
 
   $graph_config["report_name"]=isset($mreg)  ?  sanitize(implode($mreg))   : NULL;
   $graph_config["title"]=isset($mreg)  ?  sanitize(implode($mreg))   : NULL;
@@ -1158,7 +1146,7 @@ function build_aggregate_graph_config ($graph_type,
       foreach ( $index_array['metrics'] as $metric_key => $m_name ) {
         if ( preg_match("/$query/i", $metric_key, $metric_subexpr ) ) {
           if (isset($metric_subexpr) && count($metric_subexpr) > 1) {
-            $legend = array();
+            $legend = [];
             foreach ($metric_subexpr as $m) {
               $legend[] = $m;
             }
@@ -1177,7 +1165,7 @@ function build_aggregate_graph_config ($graph_type,
     $metric_matches_unique = array_unique($metric_matches);
   }
   else{
-    $metric_matches_unique = array($metric_name => $metric_name);
+    $metric_matches_unique = [$metric_name => $metric_name];
   }
 
   if ( isset($host_matches)) {
@@ -1214,8 +1202,7 @@ function build_aggregate_graph_config ($graph_type,
             $label .= " $legend";
 	}
 
-        $graph_config['series'][] = array ( "hostname" => $host_name , "clustername" => $cluster_name,
-          "metric" => $m_name,  "color" => $conf['graph_colors'][$color_index], "label" => $label, "line_width" => $line_width, "type" => $graph_type);
+        $graph_config['series'][] = ["hostname" => $host_name, "clustername" => $cluster_name, "metric" => $m_name, "color" => $conf['graph_colors'][$color_index], "label" => $label, "line_width" => $line_width, "type" => $graph_type];
 
         $counter++;
 
@@ -1236,7 +1223,7 @@ function retrieve_metrics_cache ( $index = "all" ) {
    global $conf, $index_array, $hosts, $grid, $clusters, $debug, $metrics, $context;
 
    $index; // PHPCS
-   require dirname(__FILE__) . '/lib/cache.php';
+   require __DIR__ . '/lib/cache.php';
    return;
 } // end of function get_metrics_cache () {
 
@@ -1248,6 +1235,7 @@ function getHostOverViewData($hostname,
                              $always_timestamp,
                              $always_constant,
                              $data) {
+  $s_metrics = [];
   $data->assign("extra", template("host_extra.tpl"));
 
   $data->assign("host", $hostname);
@@ -1303,7 +1291,7 @@ function getHostOverViewData($hostname,
 
   # String metrics
   if (is_array($s_metrics)) {
-    $s_metrics_data = array();
+    $s_metrics_data = [];
     ksort($s_metrics);
     foreach ($s_metrics as $name => $v) {
       # RFM - If units aren't defined for metric, make it be the empty string
@@ -1326,7 +1314,7 @@ function getHostOverViewData($hostname,
   # Constant metrics.
   $c_metrics_data = null;
   if (isset($c_metrics) and is_array($c_metrics)) {
-    $c_metrics_data = array();
+    $c_metrics_data = [];
     ksort($c_metrics);
     foreach ($c_metrics as $name => $v) {
       if (isset($v['TITLE']))  {
@@ -1370,15 +1358,15 @@ function buildMetricMaps($metrics,
 
       $metricMap[$name]['graph'] = $graphArgs;
       $metricMap[$name]['description'] =
-	isset($metric['DESC']) ? $metric['DESC'] : '';
+	$metric['DESC'] ?? '';
       $metricMap[$name]['title'] =
-	isset($metric['TITLE']) ? $metric['TITLE'] : '';
+	$metric['TITLE'] ?? '';
 
       # Setup an array of groups that can be used for sorting in group view
       if ( isset($metrics[$name]['GROUP']) ) {
 	$groups = $metrics[$name]['GROUP'];
       } else {
-	$groups = array("");
+	$groups = [""];
       }
 
       foreach ($groups as $group) {
@@ -1386,18 +1374,18 @@ function buildMetricMaps($metrics,
 	  $metricGroupMap[$group] =
 	    array_merge($metricGroupMap[$group], (array)$name);
 	} else {
-	  $metricGroupMap[$group] = array($name);
+	  $metricGroupMap[$group] = [$name];
 	}
       }
       continue;
     } // if
   } // foreach
-  return array($metricMap, $metricGroupMap);
+  return [$metricMap, $metricGroupMap];
 }
 
 // keep url decoding until it looks good
 function heuristic_urldecode($blob) {
-  while (substr($blob, 0, 1) == "%") {
+  while (str_starts_with($blob, "%")) {
     $blob = rawurldecode($blob);
   }
   return $blob;

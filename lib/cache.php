@@ -4,7 +4,7 @@
 
     $cmodule = !empty($conf['cachemodule']) ? $conf['cachemodule'] : 'Json';
 
-    include_once dirname(__FILE__) . "/Cache/Driver_${cmodule}.php";
+    include_once __DIR__ . "/Cache/Driver_${cmodule}.php";
 
     if ($conf['cachedata'] == 1 && g_cache_exists()) {
         // check for the cached file
@@ -14,7 +14,7 @@
                 if ( $debug == 1 ) {
                   echo("DEBUG: Fetching data from cache. Expires in " . $conf['cachetime'] . " seconds.\n");
                 }
-                $index_array = g_cache_deserialize($index);
+                $index_array = g_cache_deserialize();
         }
     }
 
@@ -30,7 +30,7 @@
         include $conf['gweb_root'] . "/get_ganglia.php";
 
         // only save if the result looks good
-        if (count($index_array) > 0) {
+        if ((is_countable($index_array) ? count($index_array) : 0) > 0) {
           $index_array['hosts'] = array_keys($index_array['cluster']);
           g_cache_serialize($index_array);
         }

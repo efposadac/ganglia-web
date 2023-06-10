@@ -4,10 +4,11 @@ include_once "./functions.php";
 include_once "./get_context.php";
 include_once "./ganglia.php";
 include_once "./get_ganglia.php";
-include_once "./dwoo/dwooAutoload.php";
+require __DIR__ . '/vendor/autoload.php';
+// include_once "./dwoo/dwooAutoload.php";
 
 try {
-  $dwoo = new Dwoo($conf['dwoo_compiled_dir'], $conf['dwoo_cache_dir']);
+  $dwoo = new Dwoo\Core($conf['dwoo_compiled_dir'], $conf['dwoo_cache_dir']);
 } catch (Exception $e) {
   print "<H4>There was an error initializing the Dwoo PHP Templating Engine: " .
     $e->getMessage() . 
@@ -15,8 +16,8 @@ try {
   exit;
 }
 
-$tpl = new Dwoo_Template_File( template("host_overview.tpl") );
-$data = new Dwoo_Data();
+$tpl = new Dwoo\Template\File( template("host_overview.tpl") );
+$data = new Dwoo\Data();
 getHostOverViewData($hostname, 
                     $metrics, 
                     $cluster,
@@ -25,5 +26,5 @@ getHostOverViewData($hostname,
                     $always_timestamp, 
                     $always_constant, 
                     $data);
-$dwoo->output($tpl, $data);
+echo $dwoo->get($tpl, $data);
 ?>

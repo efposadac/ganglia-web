@@ -1,10 +1,10 @@
 <?php
 class GangliaAuth {
-  private static $auth;
+  private static ?\GangliaAuth $auth = null;
 
   private $user;
   private $group;
-  private $tokenIsValid;
+  private bool $tokenIsValid;
 
   public static function getInstance() {
     if(is_null(self::$auth)) {
@@ -37,9 +37,9 @@ class GangliaAuth {
       if($this->getMagicQuotesGpc()) {
         $cookie = stripslashes($cookie);
       }
-      $data = json_decode($cookie, TRUE);
+      $data = json_decode($cookie, TRUE, 512, JSON_THROW_ON_ERROR);
 
-      if(array_keys($data) != array('user','group','token')) {
+      if(array_keys($data) != ['user', 'group', 'token']) {
         return false;
       }
 
@@ -64,15 +64,15 @@ class GangliaAuth {
   }
 
   public function getEnvironmentErrors() {
-    $errors = array();
+    $errors = [];
     if(!isset($_SERVER['ganglia_secret'])) {
-      $errors[] = "No ganglia_secret set in the server environment.  If you are using Apache, try adding 'SetEnv ganglia_secret ".sha1(mt_rand().microtime())."' to your configuration.";
+      $errors[] = "No ganglia_secret set in the server environment.  If you are using Apache, try adding 'SetEnv ganglia_secret ".sha1(random_int(0, mt_getrandmax()).microtime())."' to your configuration.";
     }
     return $errors;
   }
 
   public function environmentIsValid() {
-    return count($this->getEnvironmentErrors())==0;
+    return (is_countable($this->getEnvironmentErrors()) ? count($this->getEnvironmentErrors()) : 0)==0;
   }
 
   public function getAuthToken($user) {
@@ -82,14 +82,14 @@ class GangliaAuth {
 
   // this is how a user 'logs in'.
   public function setAuthCookie($user, $group=null) {
-    setcookie('ganglia_auth', json_encode( array('user'=>$user, 'group'=>$group, 'token'=>$this->getAuthToken($user)) ), NULL, NULL, NULL, true, true );
+    setcookie('ganglia_auth', json_encode( ['user'=>$user, 'group'=>$group, 'token'=>$this->getAuthToken($user)], JSON_THROW_ON_ERROR ), ['expires' => NULL, 'path' => NULL, 'domain' => NULL, 'secure' => true, 'httponly' => true] );
     $this->user = $user;
     $this->group = $group;
     $this->tokenIsValid = true;
   }
 
   public function destroyAuthCookie() {
-    setcookie('ganglia_auth', '', time(), NULL, NULL, true, true);
+    setcookie('ganglia_auth', '', ['expires' => time(), 'path' => NULL, 'domain' => NULL, 'secure' => true, 'httponly' => true]);
     self::$auth = null;
   }
 

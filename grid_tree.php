@@ -1,6 +1,6 @@
 <?php
-$tpl = new Dwoo_Template_File( template("grid_tree.tpl") );
-$data = new Dwoo_Data();
+$tpl = new Dwoo\Template\File( template("grid_tree.tpl") );
+$data = new Dwoo\Data();
 
 $data->assign("self", "$self");
 
@@ -16,9 +16,9 @@ if (count($ancestors)) {
    $data->assign("parentgrid", 1);
    $parentgridtable = "";
 
-   $parentgridstack = array();
+   $parentgridstack = [];
    foreach ($ancestors as $g) {
-      list($name, $link) = explode("@", $g);
+      [$name, $link] = explode("@", $g);
       $parentgridstack[] = $g;
       $parentgridstack_url = rawurlencode(join(">", $parentgridstack));
       $parentgridtable .= "<tr><td align=center class=grid>".
@@ -31,7 +31,7 @@ if (count($ancestors)) {
 $gridtable="";
 
 # Publish our children.
-if ($n = count($grid))
+if ($n = is_countable($grid) ? count($grid) : 0)
    {
       $data->assign("n", $n);
       foreach ($grid as $source => $attrs)
@@ -56,6 +56,6 @@ if ($n = count($grid))
 
 $data->assign("children", $gridtable);
 
-$dwoo->output($tpl, $data);
+echo $dwoo->get($tpl, $data);
 
 ?>

@@ -1,6 +1,6 @@
 <?php
 
-$base_dir = dirname(__FILE__);
+$base_dir = __DIR__;
 ini_set( 'include_path', ini_get('include_path').":$base_dir/../lib");
 require_once 'GangliaAuth.php';
 
@@ -11,7 +11,7 @@ class GangliaAuthTest extends TestCase {
     $_SERVER['ganglia_secret'] = 'really really secret';
 
     $user = 'foo';
-    $this->cookie_data = array('user'=>$user, 'group'=>null, 'token'=>sha1($user.$_SERVER['ganglia_secret']));
+    $this->cookie_data = ['user'=>$user, 'group'=>null, 'token'=>sha1($user.$_SERVER['ganglia_secret'])];
   }
 
   public function tearDown() {
@@ -40,7 +40,7 @@ class GangliaAuthTest extends TestCase {
   }
 
   public function testAuthUnserializesCookieInformation() {
-    $_COOKIE['ganglia_auth'] = json_encode( $this->cookie_data );
+    $_COOKIE['ganglia_auth'] = json_encode( $this->cookie_data, JSON_THROW_ON_ERROR );
 
     $auth = GangliaAuth::getInstance();
     $this->assertTrue($auth->isAuthenticated());
@@ -57,12 +57,12 @@ class GangliaAuthTest extends TestCase {
   }
 
   public function testSlashesAddedByMagicQuotesDontCauseUnserializationFailure() {
-    $_COOKIE['ganglia_auth'] = addslashes(json_encode( $this->cookie_data ));
+    $_COOKIE['ganglia_auth'] = addslashes(json_encode( $this->cookie_data, JSON_THROW_ON_ERROR ));
 
     // we can't enable real magic_quotes_gpc at runtime, so we mock it.
     $auth = $this->getMockBuilder('GangliaAuth')
       ->disableOriginalConstructor()
-      ->setMethods(array('getMagicQuotesGpc'))
+      ->setMethods(['getMagicQuotesGpc'])
       ->getMock();
 
     $auth->expects($this->once())

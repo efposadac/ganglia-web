@@ -17,7 +17,7 @@ include_once "./functions.php";
 include_once "./ganglia.php";
 include_once "./get_ganglia.php";
 
-$results_array = array();
+$results_array = [];
 
 foreach ($metrics as $hostname => $host_metrics ) {
 

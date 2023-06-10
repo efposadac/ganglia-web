@@ -32,7 +32,7 @@ function g_get_memcache() {
 		$GLOBALS['__memcached_pool'] = new Memcached();
 		$GLOBALS['__memcached_pool']->setOption(Memcached::OPT_DISTRIBUTION, Memcached::DISTRIBUTION_CONSISTENT);
 		foreach ($conf['memcached_servers'] as $server) {
-			list($host, $port) = explode(':', $server);
+			[$host, $port] = explode(':', $server);
 			$GLOBALS['__memcached_pool']->addServer( $host, (int)$port );
 		}
 	}

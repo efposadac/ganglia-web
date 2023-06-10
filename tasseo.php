@@ -5,7 +5,7 @@ include_once("./functions.php");
 
 if (isset($conf['ad-hoc-views']) && $conf['ad-hoc-views'] === true && isset($_GET['ad-hoc-view'])) {
   $is_ad_hoc = true;
-  $ad_hoc_view_json = json_decode(heuristic_urldecode($_GET['ad-hoc-view']), true);
+  $ad_hoc_view_json = json_decode(heuristic_urldecode($_GET['ad-hoc-view']), true, 512, JSON_THROW_ON_ERROR);
 }
 
 
@@ -34,9 +34,9 @@ if ( ! isset($_REQUEST['view_name']) and ! $is_ad_hoc ) {
   $available_views = get_available_views();
 
   $view_found = 0;
-  
+
   $user['view_name'] = $_REQUEST['view_name'];
-  
+
   // I am not quite sure at this point whether I should cache view info so
   // for now I will have to do this
   foreach ( $available_views as $id => $view ) {
@@ -48,7 +48,7 @@ if ( ! isset($_REQUEST['view_name']) and ! $is_ad_hoc ) {
   }
   unset($available_views);
 
-  if ( ($view_found == 0 || count($view['items']) == 0) && !$is_ad_hoc ) {
+  if ( ($view_found == 0 || (is_countable($view['items']) ? count($view['items']) : 0) == 0) && !$is_ad_hoc ) {
       die ("<font color=red size=4>There are no graphs in view you supplied or view does not exist.</font>");
   }
 
@@ -134,12 +134,12 @@ foreach ( $view_elements as $index => $element ) {
          $tasseo_e['warning'] = $element['warning'];
       if ( isset($element['critical']))
          $tasseo_e['critical'] = $element['critical'];
-      
+
       $tasseo_element[] = $tasseo_e;
       unset($tasseo_e);
    }
 }
-print json_encode($tasseo_element)
+print json_encode($tasseo_element, JSON_THROW_ON_ERROR)
 ?>;
 </script>
 <script type="text/javascript" src="js/tasseo.js"></script>

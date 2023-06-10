@@ -1,12 +1,12 @@
 <?php
-$months_ahead = array(0,1,2,3,6,9,12,18,24);
-$months_back = array(12,9,6,3,2,1);
+$months_ahead = [0, 1, 2, 3, 6, 9, 12, 18, 24];
+$months_back = [12, 9, 6, 3, 2, 1];
 if ( !isset($_REQUEST['trendrange']) or !is_numeric($_REQUEST['trendrange']) )
   $_REQUEST['trendrange'] = 6;
 if ( !isset($_REQUEST['trendhistory']) or !is_numeric($_REQUEST['trendhistory']) )
   $_REQUEST['trendhistory'] = 6;
 
-$drop_args = array("trendrange", "trendhistory");
+$drop_args = ["trendrange", "trendhistory"];
 
 foreach ( $_REQUEST as $key => $value ) {
   if ( ! in_array($key, $drop_args) )

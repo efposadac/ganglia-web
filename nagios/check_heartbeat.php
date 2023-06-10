@@ -12,7 +12,7 @@
 #  threshold = "Critical threshold ie. if last_reported is greater than this value
 #    host is considered down"
 ##########################################################################################
-$conf['gweb_root'] = dirname(dirname(__FILE__));
+$conf['gweb_root'] = dirname(__FILE__, 2);
 
 include_once $conf['gweb_root'] . "/eval_conf.php";
 include_once $conf['gweb_root'] . "/functions.php";
@@ -77,7 +77,7 @@ foreach ( $ganglia_hosts_array as $ganglia_host ) {
     $host_found = 1;
     break;
   }
-  if ( strpos(  $ganglia_host, $host ) !== false  ) {
+  if ( str_contains(  $ganglia_host, $host )  ) {
     $fqdn_by_substr = $ganglia_host;
     $host_found_by_substr = 1;
   }

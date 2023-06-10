@@ -114,7 +114,7 @@ if (!is_numeric($user['showhosts'])) $user['showhosts'] = 1;
 if(isset($_GET["choose_filter"]))
 {
   $req_choose_filter = $_GET["choose_filter"];
-  $user['choose_filter'] = array();
+  $user['choose_filter'] = [];
   foreach($req_choose_filter as $k_req => $v_req)
   {
     $k = sanitize ($k_req);
@@ -193,26 +193,11 @@ if ($context == "cluster") {
 extract( $user );
 
 # A hack for pre-2.5.0 ganglia data sources.
-$always_constant = array(
-   "swap_total" => 1,
-   "cpu_speed" => 1,
-   "swap_total" => 1
-);
+$always_constant = ["swap_total" => 1, "cpu_speed" => 1, "swap_total" => 1];
 
-$always_timestamp = array(
-   "gmond_started" => 1,
-   "reported" => 1,
-   "sys_clock" => 1,
-   "boottime" => 1
-);
+$always_timestamp = ["gmond_started" => 1, "reported" => 1, "sys_clock" => 1, "boottime" => 1];
 
 # List of report graphs
-$reports = array(
-   "load_report" => 1,
-   "cpu_report" => 1,
-   "mem_report" => 1,
-   "network_report" => 1,
-   "packet_report" => 1
-);
+$reports = ["load_report" => 1, "cpu_report" => 1, "mem_report" => 1, "network_report" => 1, "packet_report" => 1];
 
 ?>

@@ -10,12 +10,13 @@ include_once "./functions.php";
 function add_total_to_cdef($cdef,
 			   $total_ids,
 			   $graph_config_scale) {
+  $graph_config = [];
   // Percentage calculation for cdefs, if required
   $total = " CDEF:'total'=";
-  if (count($total_ids) == 0) {
+  if ((is_countable($total_ids) ? count($total_ids) : 0) == 0) {
     // Handle nothing gracefully, do nothing
     ; //PHPCS
-  } else if (count($total_ids) == 1) {
+  } else if ((is_countable($total_ids) ? count($total_ids) : 0) == 1) {
     // Concat just that id, leave it at that (100%)
     $total .= $total_ids[0];
     if (isset($graph_config_scale))
@@ -45,7 +46,7 @@ function graphdef_add_series($graphdef,
 			     $max_label_length,
 			     $conf_graphreport_stats,
 			     $conf_graphreport_stat_items) {
-  static $line_widths = array("1", "2", "3");
+  static $line_widths = ["1", "2", "3"];
 
   $label = str_pad(sanitize($series['label']), $max_label_length);
   switch ($series_type) {
@@ -113,7 +114,7 @@ function graphdef_add_series($graphdef,
     $graphdef .= legendEntry($id, $conf_graphreport_stat_items);
   }
 
-  return array($graphdef, $stack_counter);
+  return [$graphdef, $stack_counter];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -158,7 +159,7 @@ function rrdtool_graph_merge_args_from_json($rrdtool_graph,
   $cdef = '';
   $graphdef = '';
   $stack_counter = 0;
-  $total_ids = array();
+  $total_ids = [];
 
   // Loop through all the graph series
   foreach ($graph_config['series'] as $series_id => $series) {
@@ -193,9 +194,9 @@ function rrdtool_graph_merge_args_from_json($rrdtool_graph,
 	$cdef .= " CDEF:'p${unique_id}'=${unique_id},total,/,100,* ";
 
       // By default graph is a line graph
-      $series_type = isset($series['type']) ? $series['type'] : "line";
+      $series_type = $series['type'] ?? "line";
 
-      list($graphdef, $stack_counter) =
+      [$graphdef, $stack_counter] =
 	graphdef_add_series($graphdef,
 			    $series,
 			    $series_type,
@@ -241,16 +242,16 @@ function rrdtool_graph_merge_args_from_json($rrdtool_graph,
 function build_aggregate_graph_config_from_url($conf_graph_colors) {
   // If graph type is not specified default to line graph
   $graph_type = isset($_GET["gtype"]) &&
-    in_array($_GET["gtype"], array("stack", "line", "percent")) ?
+    in_array($_GET["gtype"], ["stack", "line", "percent"]) ?
     $_GET["gtype"] : 'line';
 
   // If line width not specified default to 2
   $line_width = isset($_GET["lw"]) &&
-    in_array($_GET["lw"], array("1", "2", "3")) ?
+    in_array($_GET["lw"], ["1", "2", "3"]) ?
     $_GET["lw"] : '2';
 
   $graph_legend = isset($_GET["glegend"]) &&
-    in_array($_GET["glegend"], array("show", "hide")) ?
+    in_array($_GET["glegend"], ["show", "hide"]) ?
     $_GET["glegend"] : 'show';
 
   /////////////////////////////////////////////////////////////////////////////
@@ -260,7 +261,7 @@ function build_aggregate_graph_config_from_url($conf_graph_colors) {
   /////////////////////////////////////////////////////////////////////////////
   if (isset($_GET['hl'])) {
     $counter = 0;
-    $color_count = count($conf_graph_colors);
+    $color_count = is_countable($conf_graph_colors) ? count($conf_graph_colors) : 0;
     $metric_name = str_replace("$",
 			       "",
 			       str_replace("^",
@@ -273,13 +274,7 @@ function build_aggregate_graph_config_from_url($conf_graph_colors) {
       $hostname = $parts[0];
       $clustername = $parts[1];
 
-      $series = array("hostname" => $hostname,
-                      "clustername" => $clustername,
-                      "fill" => "true",
-                      "metric" => $metric_name,
-                      "color" => $conf_graph_colors[$color_index],
-                      "label" => $hostname,
-                      "type" => $graph_type);
+      $series = ["hostname" => $hostname, "clustername" => $clustername, "fill" => "true", "metric" => $metric_name, "color" => $conf_graph_colors[$color_index], "label" => $hostname, "type" => $graph_type];
 
       if ($graph_type == "line" || $graph_type == "area") {
         $series['line_width'] = $line_width;
@@ -341,6 +336,7 @@ function rrdtool_graph_build_view_graph($rrdtool_graph,
 					$conf_rrds,
 					$conf_graphreport_stats,
 					$conf_graphreport_stat_items) {
+  $view_item = [];
   $available_views = get_available_views();
   foreach ($available_views as $view) {
     // Find view settings
@@ -360,15 +356,15 @@ function rrdtool_graph_build_view_graph($rrdtool_graph,
 				       $conf_rrds,
 				       $conf_graphreport_stats,
 				       $conf_graphreport_stat_items);
-  return array( $rrdtool_graph, $view_item);
+  return [$rrdtool_graph, $view_item];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Graphite graphs
 ///////////////////////////////////////////////////////////////////////////////
 function build_graphite_series($context, $graph_config, $host_cluster = "") {
-  $targets = array();
-  $colors = array();
+  $targets = [];
+  $colors = [];
 
   // Keep track of stacked items
   $stacked = 0;
@@ -397,8 +393,7 @@ function build_graphite_series($context, $graph_config, $host_cluster = "") {
   $series = implode($targets, '&');
   $series .= "&colorList=" . implode($colors, ',');
   $series .= "&vtitle=" .
-    urlencode(isset($graph_config['vertical_label']) ?
-	      $graph_config['vertical_label'] : "");
+    urlencode($graph_config['vertical_label'] ?? "");
 
   // Do we have any stacked elements. We assume if there is only one element
   // that is stacked that rest of it is line graphs
@@ -431,6 +426,7 @@ function build_graphite_url($rrd_graphite_link,
 			    $max,
 			    $title,
 			    $range) {
+  $target = null;
   // Check whether the link exists from Ganglia RRD tree to the graphite
   // storage/rrd_dir area
   if (! is_link($rrd_graphite_link)) {
@@ -466,7 +462,9 @@ function build_graphite_url($rrd_graphite_link,
       // Check whether report is defined in graph.d directory
       if (is_file($report_definition_file)) {
 	$graph_config = json_decode(file_get_contents($report_definition_file),
-				    TRUE);
+				    TRUE,
+        512,
+        JSON_THROW_ON_ERROR);
       } else {
 	error_log("There is JSON config file specifying $report_name.");
 	exit(1);
@@ -558,7 +556,7 @@ function get_nagios_events($overlay_nagios_base_url,
 			   $host,
 			   $start,
 			   $end) {
-  $nagios_events = array();
+  $nagios_events = [];
   $nagios_pull_url =
     $overlay_nagios_base_url .
     '/cgi-bin/api.cgi?action=host.gangliaevents' .
@@ -569,14 +567,13 @@ function get_nagios_events($overlay_nagios_base_url,
     @file_get_contents(
       $nagios_pull_url,
       0,
-      stream_context_create(array('http' => array('timeout' => 5),
-				  'https' => array('timeout' => 5))));
+      stream_context_create(['http' => ['timeout' => 5], 'https' => ['timeout' => 5]]));
   if (strlen($raw_nagios_events) > 3) {
-    $nagios_events = json_decode($raw_nagios_events, TRUE);
+    $nagios_events = json_decode($raw_nagios_events, TRUE, 512, JSON_THROW_ON_ERROR);
     // Handle any "ERROR" formatted messages and wipe resulting array.
     if (isset($nagios_events['response_type']) &&
         $nagios_events['response_type'] == 'ERROR') {
-      $nagios_events = array();
+      $nagios_events = [];
     }
   }
   return $nagios_events;
@@ -591,6 +588,7 @@ function rrdgraph_cmd_add_overlay_events($command,
 					 $conf_overlay_events_line_type,
 					 $conf_graph_colors,
 					 $nagios_events) {
+  $start_time = [];
   $debug = FALSE;
 
   // In order not to pollute the command line with all the possible VRULEs
@@ -615,9 +613,9 @@ function rrdgraph_cmd_add_overlay_events($command,
   $event_color_json = file_get_contents($conf_overlay_events_color_map_file);
   if ($debug)
     error_log("$event_color_json");
-  $event_color_array = json_decode($event_color_json, TRUE);
-  $initial_event_color_count = count($event_color_array);
-  $event_color_map = array();
+  $event_color_array = json_decode($event_color_json, TRUE, 512, JSON_THROW_ON_ERROR);
+  $initial_event_color_count = is_countable($event_color_array) ? count($event_color_array) : 0;
+  $event_color_map = [];
   foreach ($event_color_array as $event_color_entry) {
     $event_color_map[$event_color_entry['summary']] =
       $event_color_entry['color'];
@@ -629,7 +627,7 @@ function rrdgraph_cmd_add_overlay_events($command,
   }
 
   // Combine the nagios_events array, if it exists
-  if (count($nagios_events) > 0) {
+  if ((is_countable($nagios_events) ? count($nagios_events) : 0) > 0) {
     // World's dumbest array merge:
     foreach ($nagios_events as $ne) {
       $events_array[] = $ne;
@@ -654,9 +652,9 @@ function rrdgraph_cmd_add_overlay_events($command,
   $original_command = $command;
 
   // Loop through all the events
-  $color_count = count($conf_graph_colors);
+  $color_count = is_countable($conf_graph_colors) ? count($conf_graph_colors) : 0;
   $counter = 0;
-  $legend_items = array();
+  $legend_items = [];
   foreach ($events_array as $id => $event) {
     $evt_start = $event['start_time'];
     // Make sure it's a number
@@ -731,8 +729,7 @@ function rrdgraph_cmd_add_overlay_events($command,
 	    $color_index = count($event_color_map) % $color_count;
 	    $color = $conf_graph_colors[$color_index];
 	    $event_color_map[$summary] = $color;
-	    $event_color_array[] = array('summary' => $summary,
-					 'color' => $color);
+	    $event_color_array[] = ['summary' => $summary, 'color' => $color];
 	    if ($debug)
 	      error_log("process_overlay_events: " .
 			"Adding new event color: $summary $color");
@@ -796,8 +793,8 @@ function rrdgraph_cmd_add_overlay_events($command,
   } // end of foreach ( $events_array ...
 
   unset($events_array);
-  if (count($event_color_array) > $initial_event_color_count) {
-    $event_color_json = json_encode($event_color_array);
+  if ((is_countable($event_color_array) ? count($event_color_array) : 0) > $initial_event_color_count) {
+    $event_color_json = json_encode($event_color_array, JSON_THROW_ON_ERROR);
     file_put_contents($conf_overlay_events_color_map_file,
 		      $event_color_json);
   }
@@ -806,7 +803,7 @@ function rrdgraph_cmd_add_overlay_events($command,
 
 function process_graph_arguments($graph) {
   $graph_report = $graph;
-  $graph_arguments = array();
+  $graph_arguments = [];
 
   $pos = strpos($graph, ",");
   if ($pos !== FALSE) {
@@ -828,7 +825,7 @@ function process_graph_arguments($graph) {
 	$graph_arguments[] = $arg;
     }
   }
-  return array($graph_report, $graph_arguments);
+  return [$graph_report, $graph_arguments];
 }
 
 
@@ -868,7 +865,7 @@ function rrdgraph_cmd_build($rrdtool_graph,
       } else {
 	$graph_function = "graph_${graph}";
 	if ($conf['enable_pass_in_arguments_to_optional_graphs'] &&
-	    count($graph_arguments)) {
+	    (is_countable($graph_arguments) ? count($graph_arguments) : 0)) {
 	  $rrdtool_graph['arguments'] = $graph_arguments;
 	  // Pass by reference call, $rrdtool_graph modified inplace
 	  $graph_function($rrdtool_graph);
@@ -883,7 +880,7 @@ function rrdgraph_cmd_build($rrdtool_graph,
 	  'HRULE:1#FFCC33:"Check \$conf[graphdir] should not be relative path"';
       } else {
 	$graph_config =
-	  json_decode(file_get_contents($json_report_file), TRUE );
+	  json_decode(file_get_contents($json_report_file), TRUE, 512, JSON_THROW_ON_ERROR );
 
 	// We need to add hostname and clustername if it's not specified
 	foreach (array_keys($graph_config['series']) as $series_id) {
@@ -960,9 +957,9 @@ function rrdgraph_cmd_build($rrdtool_graph,
     // if we are trending disk we may have added a disk recently which will
     // skew a trend line. By default we'll use 6 months however we'll let
     // user define this if they want to.
-    $rrdtool_graph['start'] = "-" . $user_trend_history * 2592000 . "s";
+    $rrdtool_graph['start'] = "-" . $user_trend_history * 2_592_000 . "s";
     // Project the trend line this many months ahead
-    $rrdtool_graph['end'] = "+" . $user_trend_range * 2592000 . "s";
+    $rrdtool_graph['end'] = "+" . $user_trend_range * 2_592_000 . "s";
   }
 
   if ($max)
@@ -997,17 +994,7 @@ function rrdgraph_cmd_build($rrdtool_graph,
     }
   }
   if ($conf['rrdtool_base_1024'] &&
-      in_array($vlabel, array('bytes',
-			      'Bytes',
-			      'bytes/s',
-			      'Bytes/s',
-			      'kB',
-			      'MB',
-			      'GB',
-			      'bits',
-			      'Bits',
-			      'bits/s',
-			      'Bits/s'))) {
+      in_array($vlabel, ['bytes', 'Bytes', 'bytes/s', 'Bytes/s', 'kB', 'MB', 'GB', 'bits', 'Bits', 'bits/s', 'Bits/s'])) {
     // Set graph base value to 1024
     $rrdtool_graph['extras'] = isset($rrdtool_graph['extras']) ?
       $rrdtool_graph['extras'] . " --base=1024" : " --base=1024" ;
@@ -1035,7 +1022,7 @@ function rrdgraph_cmd_build($rrdtool_graph,
   $command .= array_key_exists('extras', $rrdtool_graph) ?
     ' ' . $rrdtool_graph['extras'] . ' ' : '';
   $command .= " $rrdtool_graph[series]";
-  return array($command, $rrdtool_graph);
+  return [$command, $rrdtool_graph];
 }
 
 
@@ -1054,6 +1041,9 @@ function output_data_to_external_format($rrdtool_graph_series,
 					$json_output,
 					$step,
 					$rrd_options) {
+  $flot_array = [];
+  $output_array = [];
+  $output_vals = [];
   // First find RRDtool DEFs by parsing $rrdtool_graph['series']
   preg_match_all("/([^V]DEF|CDEF):(.*)(:AVERAGE|\s)/",
 		 " " . $rrdtool_graph_series,
@@ -1074,11 +1064,7 @@ function output_data_to_external_format($rrdtool_graph_series,
       if (preg_match("/(STACK:|AREA:)/", $value, $ignore))
 	$metric_type = "stack";
       $metric_name = $out[6];
-      $ds_attr = array("ds_name" => $ds_name,
-		       "cluster_name" => '',
-		       "graph_type" => $metric_type,
-		       "host_name" => '',
-		       "metric_name" => $metric_name);
+      $ds_attr = ["ds_name" => $ds_name, "cluster_name" => '', "graph_type" => $metric_type, "host_name" => '', "metric_name" => $metric_name];
 
       // Add color if it exists
       $pos_hash = strpos($out[4], '#');
@@ -1092,7 +1078,7 @@ function output_data_to_external_format($rrdtool_graph_series,
 	  $ds_attr['color'] = substr($out[4], $pos_hash);
       }
 
-      if (strpos($value, ":dashes") !== FALSE)
+      if (str_contains($value, ":dashes"))
 	$ds_attr['dashes'] = 1;
 
       $output_array[] = $ds_attr;
@@ -1157,7 +1143,7 @@ function output_data_to_external_format($rrdtool_graph_series,
   // If there are multiple metrics columns will be > 1
   $num_of_metrics = $xml->meta->columns;
 
-  $metric_values = array();
+  $metric_values = [];
   // Build the metric_values array
 
   $x = 0;
@@ -1172,11 +1158,11 @@ function output_data_to_external_format($rrdtool_graph_series,
     if (is_array($values["v"])) {
       foreach ($values["v"] as $key => $value) {
 	$output_array[$key]["datapoints"][] =
-	  array(build_value_for_json($value), intval($values['t']));
+	  [build_value_for_json($value), intval($values['t'])];
       }
     } else {
       $output_array[0]["datapoints"][] =
-	array(build_value_for_json($values["v"]), intval($values['t']));
+	[build_value_for_json($values["v"]), intval($values['t'])];
     }
     $x++;
   }
@@ -1187,12 +1173,12 @@ function output_data_to_external_format($rrdtool_graph_series,
     // Live Dashboard and we are outputting aggregate graph.
     // If so we need to add up all the values
     if ($live_dashboard && count($output_array) > 1) {
-      $summed_output = array();
+      $summed_output = [];
       foreach ($output_array[0]['datapoints'] as $index => $datapoint) {
 	// Data point is an array with value and UNIX time stamp. Initialize
 	// summed output as 0
 	if (is_numeric($datapoint[0]) && is_numeric($datapoint[1])) {
-	  $summed_output[$index] = array(0, $datapoint[1]);
+	  $summed_output[$index] = [0, $datapoint[1]];
 	  $output_array_length = count($output_array);
 	  for ($i = 0 ; $i < $output_array_length; $i++) {
 	    $summed_output[$index][0] +=
@@ -1206,27 +1192,26 @@ function output_data_to_external_format($rrdtool_graph_series,
     }
     header("Content-type: application/json");
     header("Content-Disposition: inline; filename=\"ganglia-metrics.json\"");
-    print json_encode($output_array);
+    print json_encode($output_array, JSON_THROW_ON_ERROR);
   }
 
   // If Flot output massage the data JSON
   if ($flot_output) {
     foreach ($output_array as $metric_array) {
       foreach ($metric_array['datapoints'] as $values) {
-	$data_array[] = array ($values[1] * 1000, $values[0]);
+	$data_array[] = [$values[1] * 1000, $values[0]];
       }
 
-      $gdata = array('label' =>
+      $gdata = ['label' =>
 		     strip_domainname($metric_array['host_name']) .
 		     " " .
-		     $metric_array['metric_name'],
-		     'data' => $data_array);
+		     $metric_array['metric_name'], 'data' => $data_array];
 
       if (array_key_exists('color', $metric_array))
 	$gdata['color'] = $metric_array['color'];
 
       if (array_key_exists('dashes', $metric_array)) {
-	$gdata['dashes'] = array();
+	$gdata['dashes'] = [];
 	$gdata['dashes']['show'] = True;
 	$gdata['dashes']['dashLength'] = 5;
 	$gdata['lines']['show'] = True;
@@ -1243,7 +1228,7 @@ function output_data_to_external_format($rrdtool_graph_series,
       unset($data_array);
     }
     header("Content-type: application/json");
-    print json_encode($flot_array);
+    print json_encode($flot_array, JSON_THROW_ON_ERROR);
   }
 
   if ($csv_output) {
@@ -1286,7 +1271,7 @@ function output_data_to_external_format($rrdtool_graph_series,
       $output_vals['data'][] = $array[0];
     }
 
-    print json_encode(array($output_vals, $output_vals));
+    print json_encode([$output_vals, $output_vals]);
   }
 }
 
@@ -1335,7 +1320,7 @@ function execute_graph_command($graph_engine, $command) {
   }
 }
 
-$gweb_root = dirname(__FILE__);
+$gweb_root = __DIR__;
 
 $metric_name = isset($_GET["m"]) ? sanitize($_GET["m"]) : NULL;
 // In clusterview we may supply report as metric name so let's make sure it
@@ -1348,9 +1333,9 @@ if ( preg_match("/_report$/", $metric_name) && !isset($_GET["g"]) ) {
 }
 
 if ($conf['enable_pass_in_arguments_to_optional_graphs'])
-  list($graph, $graph_arguments) = process_graph_arguments($graph);
+  [$graph, $graph_arguments] = process_graph_arguments($graph);
 else
-  $graph_arguments = array();
+  $graph_arguments = [];
 
 $grid = isset($_GET["G"]) ? sanitize( $_GET["G"]) : NULL;
 $self = isset($_GET["me"]) ? sanitize( $_GET["me"]) : NULL;
@@ -1485,10 +1470,7 @@ if ($ce and (is_numeric($ce) or strtotime($ce)))
   $end = $ce;
 
 // Set some standard defaults that don't need to change much
-$rrdtool_graph = array('start' => $start,
-		       'end' => $end,
-		       'width' => $width,
-		       'height' => $height);
+$rrdtool_graph = ['start' => $start, 'end' => $end, 'width' => $width, 'height' => $height];
 
 // automatically strip domainname from small graphs where it won't fit
 if ($size == "small")
@@ -1573,7 +1555,7 @@ if (isset($_GET["aggregate"]) && $_GET['aggregate'] == 1) {
 $user['view_name'] = isset($_GET["vn"]) ? sanitize ($_GET["vn"]) : NULL;
 $user['item_id'] = isset($_GET["item_id"]) ? sanitize ($_GET["item_id"]) : NULL;
 if ($user['view_name'] && $user['item_id']) {
-  list ($rrdtool_graph, $graph_config) =
+  [$rrdtool_graph, $graph_config] =
     rrdtool_graph_build_view_graph($rrdtool_graph,
 				   $user['view_name'],
 				   $user['item_id'],
@@ -1608,8 +1590,7 @@ switch ($conf['graph_engine']) {
       }
     }
 
-    list($command,
-       $rrdtool_graph) = rrdgraph_cmd_build($rrdtool_graph,
+    [$command, $rrdtool_graph] = rrdgraph_cmd_build($rrdtool_graph,
 					    $vlabel,
 					    $conf,
 					    $graph_config,
@@ -1692,7 +1673,7 @@ if ($showEvents == "show" &&
     $conf['graph_engine'] == "rrdtool" &&
     ! in_array($range, $conf['overlay_events_exclude_ranges']) &&
     ! $user['trend_line']) {
-  $nagios_events = array();
+  $nagios_events = [];
   if ($conf['overlay_nagios_events'])
     $nagios_events = get_nagios_events($conf['overlay_nagios_base_url'],
 				       $raw_host,

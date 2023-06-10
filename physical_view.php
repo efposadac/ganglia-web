@@ -12,16 +12,16 @@
 # ($metrics, $clusters, $hosts) are set, and header.php
 # already called.
 
-$tpl = new Dwoo_Template_File( template("physical_view.tpl") );
-$data = new Dwoo_Data();
+$tpl = new Dwoo\Template\File( template("physical_view.tpl") );
+$data = new Dwoo\Data();
 $data->assign("cluster", $clustername);
 $cluster_url=rawurlencode($clustername);
 $data->assign("cluster_url", $cluster_url);
 
-$verbosity_levels = array('3' => "", '2' => "", '1' => "");
+$verbosity_levels = ['3' => "", '2' => "", '1' => ""];
 
 # Assign the verbosity level. Can take the value of the 'p' CGI variable.
-$verbose = $physical ? $physical : 2;
+$verbose = $physical ?: 2;
 
 $verbosity_levels[$verbose] = "checked";
 $data->assign("verbosity_levels", $verbosity_levels);
@@ -31,10 +31,10 @@ $data->assign("verbosity_levels", $verbosity_levels);
 #
 $CPUs = cluster_sum("cpu_num", $metrics);
 # Divide by 1024^2 to get Memory in GB.
-$Memory = sprintf("%.1f GB", cluster_sum("mem_total", $metrics)/(float)1048576);
+$Memory = sprintf("%.1f GB", cluster_sum("mem_total", $metrics)/(float)1_048_576);
 $Disk = cluster_sum("disk_total", $metrics);
 $Disk = $Disk ? sprintf("%.1f GB", $Disk) : "Unknown"; 
-list($most_full, $most_full_host) = cluster_min("part_max_used", $metrics);
+[$most_full, $most_full_host] = cluster_min("part_max_used", $metrics);
 $data->assign("CPUs", $CPUs);
 $data->assign("Memory", $Memory);
 $data->assign("Disk", $Disk);
@@ -51,6 +51,7 @@ $data->assign("cols_menu", $cols_menu);
 # Works with or without "location" host attributes.
 function physical_racks() {
 
+   $racks = [];
    global $hosts_up, $hosts_down;
 
    # 2Key = "Rack ID / Rank (order in rack)" = [hostname, UP|DOWN]
@@ -62,7 +63,7 @@ function physical_racks() {
    if (is_array($hosts_up)) {
       foreach ($hosts_up as $host=>$v) {
          # Try to find the node's location in the cluster.
-         list($rack, $rank, $plane) = findlocation($v);
+         [$rack, $rank, $plane] = findlocation($v);
 
          if ($rack>=0 and $rank>=0 and $plane>=0 and !array_key_exists($rank, $racks[$rack])) {
             $racks[$rack][$rank]=$v['NAME'];
@@ -79,7 +80,7 @@ function physical_racks() {
    }
    if (is_array($hosts_down)) {
       foreach ($hosts_down as $host=>$v) {
-         list($rack, $rank, $plane) = findlocation($v);
+         [$rack, $rank, $plane] = findlocation($v);
          if ($rack>=0 and $rank>=0 and $plane>=0 and !array_key_exists($rank, $racks[$rack])) {
             $racks[$rack][$rank]=$v['NAME'];
             continue;
@@ -99,9 +100,9 @@ function physical_racks() {
    else {
       ksort($racks);
       reset($racks);
-      while (list($rack,) = each($racks)) {
-         # In our convention, y=0 is close to the floor. (Easier to wire up)
-         krsort($racks[$rack]);
+      foreach (array_keys($racks) as $rack) {
+          # In our convention, y=0 is close to the floor. (Easier to wire up)
+          krsort($racks[$rack]);
       }
    }
    
@@ -115,6 +116,8 @@ function physical_racks() {
 # begins with "<tr><td>" and ends the same.
 function nodebox($hostname, $verbose, $title="", $extrarow="") {
 
+   $hosts_down = null;
+   $row3 = null;
    global $cluster, $clustername, $metrics, $hosts_up, $GHOME;
 
    if (!$title) $title = $hostname;
@@ -130,7 +133,7 @@ function nodebox($hostname, $verbose, $title="", $extrarow="") {
    # The metrics we need for this node.
 
    # Give memory in Gigabytes. 1GB = 2^20 bytes.
-   $mem_total_gb = $m['mem_total']['VAL']/1048576;
+   $mem_total_gb = $m['mem_total']['VAL']/1_048_576;
    $load_one=$m['load_one']['VAL'];
    $cpu_speed=round($m['cpu_speed']['VAL']/1000, 2);
    $cpu_num= $m['cpu_num']['VAL'];
@@ -230,7 +233,7 @@ function showrack($ID) {
 
 # 2Key = "Rack ID / Rank (order in rack)" = [hostname, UP|DOWN]
 $racks = physical_racks();
-$racks_data = array();
+$racks_data = [];
 
 # Make a $cols-wide table of Racks.
 $i=1;
@@ -247,5 +250,5 @@ foreach ($racks as $rack=>$v)
    }
 
 $data->assign("racks", $racks_data);
-$dwoo->output($tpl, $data);
+echo $dwoo->get($tpl, $data);
 ?>

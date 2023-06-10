@@ -4,7 +4,7 @@
 # read and evaluate the configuration file
 #
 
-$base_dir = dirname(__FILE__);
+$base_dir = __DIR__;
 set_include_path( "$base_dir/lib:" . ini_get( 'include_path' ) );
 
 # Load main config file.
@@ -17,7 +17,7 @@ if( file_exists( $base_dir . "/conf.php" ) ) {
   include_once $base_dir . "/conf.php";
 }
 
-$errors = array();
+$errors = [];
 
 if ($conf['overlay_events'] && ($conf['overlay_events_provider'] == "json")) {
   $events_file = $conf['overlay_events_file'];
@@ -60,31 +60,31 @@ if ($conf['overlay_events']) {
 
 // Installation validity checks
 if ( ! isset($conf['rrds']) ||  ! is_readable($conf['rrds']) ) {
-  $errors[] = "RRDs directory '${conf['rrds']}' is not readable.<br/>".
+  $errors[] = "RRDs directory '{$conf['rrds']}' is not readable.<br/>".
   "Please adjust <code>\$conf['rrds']</code>."; 
 }
 
 if ( ! isset($conf['dwoo_compiled_dir']) || ! is_writeable($conf['dwoo_compiled_dir']) ) {
-  $errors[] = "DWOO compiled templates directory '${conf['dwoo_compiled_dir']}' is not writeable.<br/>".
+  $errors[] = "DWOO compiled templates directory '{$conf['dwoo_compiled_dir']}' is not writeable.<br/>".
   "Please adjust <code>\$conf['dwoo_compiled_dir']</code>."; 
 }
 
 if ( ! isset($conf['dwoo_cache_dir']) || ! is_writeable($conf['dwoo_cache_dir']) ) {
-  $errors[] = "DWOO cache directory '${conf['dwoo_cache_dir']}' is not writeable.<br/>".
+  $errors[] = "DWOO cache directory '{$conf['dwoo_cache_dir']}' is not writeable.<br/>".
   "Please adjust <code>\$conf['dwoo_cache_dir']</code>."; 
 }
 
 if( ! isset($conf['views_dir']) || ! is_readable($conf['views_dir']) ) {
-  $errors[] = "Views directory '${conf['views_dir']}' is not readable.<br/>".
+  $errors[] = "Views directory '{$conf['views_dir']}' is not readable.<br/>".
   "Please adjust <code>\$conf['views_dir']</code>.";
 }
 
 if( ! isset($conf['conf_dir']) || ! is_readable($conf['conf_dir']) ) {
-  $errors[] = "Directory used to store configuration information '${conf['conf_dir']}' is not readable.<br/>".
+  $errors[] = "Directory used to store configuration information '{$conf['conf_dir']}' is not readable.<br/>".
   "Please adjust <code>\$conf['conf_dir']</code>.";
 }
 
-$valid_auth_options = array( 'disabled', 'readonly', 'enabled' );
+$valid_auth_options = ['disabled', 'readonly', 'enabled'];
 if( ! isset( $conf['auth_system'] ) ) {
   $errors[] = "Please define \$conf['auth_system'] and set it to one of these values:
   <ul>
@@ -134,7 +134,7 @@ if( isset( $conf['rrdcached_socket'] ) )
 {
     if(!empty( $conf['rrdcached_socket'] ) )
     {
-        $rrd_options .= " --daemon ${conf['rrdcached_socket']}";
+        $rrd_options .= " --daemon {$conf['rrdcached_socket']}";
     }
 }
 ?>

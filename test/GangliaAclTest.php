@@ -1,6 +1,6 @@
 <?php
 
-$base_dir = dirname(__FILE__);
+$base_dir = __DIR__;
 ini_set( 'include_path', ini_get('include_path').":$base_dir/../lib");
 require_once 'GangliaAcl.php';
 
@@ -54,7 +54,7 @@ class GangliaAclTest extends TestCase {
     public function testGuestCanViewNormalCluster() {
       $this->object->add( new Zend_Acl_Resource('clustername'), GangliaAcl::ALL_CLUSTERS );
       $this->object->addRole( 'username', GangliaAcl::GUEST );
-      $this->object->allow( 'username', 'clustername', array(GangliaAcl::EDIT, GangliaAcl::VIEW) );
+      $this->object->allow( 'username', 'clustername', [GangliaAcl::EDIT, GangliaAcl::VIEW] );
       
       $this->assertTrue( $this->object->isAllowed( GangliaAcl::GUEST, 'clustername', GangliaAcl::VIEW ) );
     }
@@ -71,7 +71,7 @@ class GangliaAclTest extends TestCase {
     public function testUserMayBeGrantedEditAccessToPrivateCluster() {
       $this->object->addPrivateCluster( 'clustername' );
       $this->object->addRole( 'newuser', GangliaAcl::GUEST );
-      $this->object->allow( 'newuser', 'clustername', array( GangliaAcl::VIEW, GangliaAcl::EDIT ) );
+      $this->object->allow( 'newuser', 'clustername', [GangliaAcl::VIEW, GangliaAcl::EDIT] );
       
       $this->assertTrue( $this->object->isAllowed( 'newuser', 'clustername', GangliaAcl::VIEW ) );
       $this->assertTrue( $this->object->isAllowed( 'newuser', 'clustername', GangliaAcl::EDIT ) );

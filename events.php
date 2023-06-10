@@ -1,9 +1,9 @@
 <?php
-$conf['gweb_root'] = dirname(__FILE__);
+$conf['gweb_root'] = __DIR__;
 include_once $conf['gweb_root'] . "/eval_conf.php";
 
 if (isset($_GET['calendar_events_only'])) {
-  $conf['gweb_root'] = dirname(__FILE__);
+  $conf['gweb_root'] = __DIR__;
 
   include_once $conf['gweb_root'] . "/functions.php";
   include_once $conf['gweb_root'] . "/lib/common_api.php";
@@ -11,24 +11,16 @@ if (isset($_GET['calendar_events_only'])) {
   $start = new DateTime($_GET['start']);
   $end = new DateTime($_GET['end']);
   $events = ganglia_events_get($start->getTimestamp(), $end->getTimestamp());
-  $cal_events = array();
+  $cal_events = [];
   foreach ( $events as $id => $event ) {
-    $cal_event = array('title' => $event['summary'],
-                       'start' => $event['start_time'] * 1000,
-                       'end' => isset($event['end_time']) ? $event['end_time'] * 1000 : NULL,
-                       'gweb_event_id' => $event['event_id'],
-                       'grid' => $event['grid'],
-                       'cluster' => $event['cluster'],
-                       'host_regex' => $event['host_regex'],
-                       'start_time' => $event['start_time'],
-                       'description' => $event['description']);
+    $cal_event = ['title' => $event['summary'], 'start' => $event['start_time'] * 1000, 'end' => isset($event['end_time']) ? $event['end_time'] * 1000 : NULL, 'gweb_event_id' => $event['event_id'], 'grid' => $event['grid'], 'cluster' => $event['cluster'], 'host_regex' => $event['host_regex'], 'start_time' => $event['start_time'], 'description' => $event['description']];
 
     if (isset($event['end_time']))
       $cal_event['end_time'] = $event['end_time'];
 
     array_push($cal_events, $cal_event);
   }
-  $json = json_encode($cal_events);
+  $json = json_encode($cal_events, JSON_THROW_ON_ERROR);
   print "$json";
   exit(0);
 }
@@ -238,19 +230,15 @@ if ($conf['display_events_using_calendar']) {
   function start_time_cmp($ev1, $ev2) {
     $start1 = $ev1['start_time'];
     $start2 = $ev2['start_time'];
-
-    if ($start1 == $start2)
-      return 0;
-
-    return ($start1 < $start2) ? 1 : -1;
+    return $start2 <=> $start1;
   }
 
   $events_array = ganglia_events_get();
-  if (count($events_array) > 0) {
+  if ((is_countable($events_array) ? count($events_array) : 0) > 0) {
     print "<tbody>";
     usort($events_array, 'start_time_cmp');
     foreach ( $events_array as $id => $event ) {
-      $description = isset($event['description']) ? $event['description'] : "";
+      $description = $event['description'] ?? "";
       $end_time = isset($event['end_time']) ? date("Y/m/d H:i", $event['end_time']) : "";
       print "<tr><td>" . date("Y/m/d H:i", $event['start_time']) . "</td>" .
         "<td>" . $end_time . "</td>" .

@@ -1,6 +1,6 @@
 <?php
 
-$conf['gweb_root'] = dirname(dirname(dirname(__FILE__)));
+$conf['gweb_root'] = dirname(__FILE__, 3);
 
 include_once $conf['gweb_root'] . "/eval_conf.php";
 include_once $conf['gweb_root'] . "/lib/common_api.php";
@@ -34,7 +34,7 @@ function ganglia_events_add( $event ) {
     api_return_error( $event_id->getMessage());
   }
   $event_id = strval($event_id);
-  $message = array( "status" => "ok", "event_id" => $event_id );
+  $message = ["status" => "ok", "event_id" => $event_id];
   return $message;
 } // end method ganglia_events_add
 
@@ -49,7 +49,7 @@ function ganglia_events_get( $start = NULL, $end = NULL ) {
   $sql = "SELECT * FROM overlay_events ";
   if ( $start != NULL || $end != NULL ) {
     $sql .= " WHERE ";
-    $clauses = array();
+    $clauses = [];
     if ( $start != NULL ) {
       $clauses[] = "start_time >= " . $db->quote( $start, 'integer' );
     }
@@ -65,7 +65,7 @@ function ganglia_events_get( $start = NULL, $end = NULL ) {
     api_return_error( $result->getMessage());
   }
 
-  $events_array = array();
+  $events_array = [];
   while ( ( $row = $result->fetchRow( MDB2_FETCHMODE_ASSOC ) ) ) {
     $events_array[] = $row;
   }
@@ -85,7 +85,7 @@ function ganglia_event_delete( $event_id ) {
     api_return_error( $result->getMessage());
   }
 
-  $message = array( "status" => "ok", "event_id" => $event_id );
+  $message = ["status" => "ok", "event_id" => $event_id];
 
   return $message;
 } // end method ganglia_event_delete
@@ -100,7 +100,7 @@ function ganglia_event_modify( $event ) {
   $db =& MDB2::factory( $conf['overlay_events_dsn'] );
   if (DB::isError($db)) { api_return_error($db->getMessage()); }
 
-  $clauses = array();
+  $clauses = [];
 
   if (isset( $event['start_time'] )) {
     if ( $event['start_time'] == "now" ) {
@@ -113,7 +113,7 @@ function ganglia_event_modify( $event ) {
     $clauses[] = "start_time = " . $db->quote( $start_time, 'integer' );
   } // end isset start_time
 
-  foreach(array('cluster', 'description', 'summary', 'grid', 'host_regex') as $k) {
+  foreach(['cluster', 'description', 'summary', 'grid', 'host_regex'] as $k) {
     if (isset( $event[$k] )) {
       $clauses[] = "${k} = " . $db->quote( $event[$k], 'text' );
     }
@@ -129,7 +129,7 @@ function ganglia_event_modify( $event ) {
   if (PEAR::isError($result)) {
     api_return_error( $result->getMessage());
   }
-  $message = array( "status" => "ok", "event_id" => $event['event_id'] );
+  $message = ["status" => "ok", "event_id" => $event['event_id']];
   return $message;
 } // end method ganglia_event_modify
 

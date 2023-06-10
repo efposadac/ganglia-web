@@ -36,7 +36,7 @@ $(function() {
   require_once('./eval_conf.php');
   require_once('./functions.php');
 
-  $available_metrics = array();
+  $available_metrics = [];
   retrieve_metrics_cache("metric_list");
 
   asort($index_array['metric_list']);

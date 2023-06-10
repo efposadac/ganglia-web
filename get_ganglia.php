@@ -11,19 +11,19 @@ if (! in_array($context, $SKIP_GMETAD_CONTEXTS) ) {
    if (! Gmetad($conf['ganglia_ip'], $conf['ganglia_port']) )
       {
          print "<H4>There was an error collecting ganglia data ".
-            "(${conf['ganglia_ip']}:${conf['ganglia_port']}): $error</H4>\n";
+            "({$conf['ganglia_ip']}:{$conf['ganglia_port']}): $error</H4>\n";
          exit;
       }
       
       
    # If we have no child data sources, assume something is wrong.
-   if (!count($grid) and !count($cluster))
+   if (!(is_countable($grid) ? count($grid) : 0) and !(is_countable($cluster) ? count($cluster) : 0))
       {
          print "<H4>Ganglia cannot find a data source. Is gmond running?</H4>";
          exit;
       }
    # If we only have one cluster source, suppress MetaCluster output.
-   if (count($grid) < 2 and $context=="meta")
+   if ((is_countable($grid) ? count($grid) : 0) < 2 and $context=="meta")
       {
          # Lets look for one cluster (the other is our grid).
          foreach($grid as $source)

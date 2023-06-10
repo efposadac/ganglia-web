@@ -43,16 +43,16 @@ if( $error ) {
 }
 
 
-$default_reports = array("included_reports" => array(), "excluded_reports" => array());
+$default_reports = ["included_reports" => [], "excluded_reports" => []];
 $default_file = $conf['conf_dir'] . "/default.json";
 if ( is_file($default_file) ) {
-  $default_reports = array_merge($default_reports, json_decode(file_get_contents($default_file), TRUE));
+  $default_reports = array_merge($default_reports, json_decode(file_get_contents($default_file), TRUE, 512, JSON_THROW_ON_ERROR));
 }
 
 $override_file = $conf['conf_dir'] . $json_filename_suffix;
-$override_reports = array("included_reports" => array(), "excluded_reports" => array());
+$override_reports = ["included_reports" => [], "excluded_reports" => []];
 if ( is_file($override_file) ) {
-  $override_reports = array_merge($override_reports, json_decode(file_get_contents($override_file), TRUE));
+  $override_reports = array_merge($override_reports, json_decode(file_get_contents($override_file), TRUE, 512, JSON_THROW_ON_ERROR));
 }
 
 if ( isset($_GET['action']) ) {
@@ -77,7 +77,7 @@ if ( isset($_GET['action']) ) {
   }
 
   if ( isset($reports) && is_array($reports) ) {
-    $json = json_encode($reports);
+    $json = json_encode($reports, JSON_THROW_ON_ERROR);
     if ( file_put_contents($override_file, json_prettyprint($json)) === FALSE ) {
   ?>
     <div class="ui-widget">
@@ -159,7 +159,7 @@ print "<h4>Clustername: " . $clustername . "</h4>";
 <?php
 function create_radio_button($variable_name, $variable_value = "ignored") {
   $str = "";
-  $possible_values = array("included", "excluded", "ignored" );
+  $possible_values = ["included", "excluded", "ignored"];
   foreach ( $possible_values as $key => $value ) {
     $variable_value == $value ? $checked = "checked" : $checked = "";
     $str .=  "<td><input type=radio value=" . $value . " name=reports[\"" . $variable_name . "\"] $checked></td>";    
@@ -169,7 +169,7 @@ function create_radio_button($variable_name, $variable_value = "ignored") {
 }
 
 // Initialize the available reports array
-$available_reports = array();
+$available_reports = [];
 
 /* -----------------------------------------------------------------------
  Find available graphs by looking in the GANGLIA_DIR/graph.d directory

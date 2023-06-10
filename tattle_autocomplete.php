@@ -16,7 +16,7 @@ if ( isset($_GET['term']) && $_GET['term'] != "" ) {
       foreach ( $hosts as $key => $host_name ) {
         $clusters = $index_array['cluster'][$host_name];
         foreach ($clusters as $cluster_name) {
-          $results[] = array( "value" => $cluster_name . "_|_" . $host_name . "_|_" . $metric_name);
+          $results[] = ["value" => $cluster_name . "_|_" . $host_name . "_|_" . $metric_name];
         }
       }
     }
@@ -24,6 +24,6 @@ if ( isset($_GET['term']) && $_GET['term'] != "" ) {
 
 }
 
-echo json_encode($results);
+echo json_encode($results, JSON_THROW_ON_ERROR);
 
 ?>

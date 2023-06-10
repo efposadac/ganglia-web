@@ -13,7 +13,7 @@
 # ignore_host_reg = regular expression of hosts we should ignore e.g. if you don't
 # want to be alerted if gmond on test machines is down
 ##########################################################################################
-$conf['gweb_root'] = dirname(dirname(__FILE__));
+$conf['gweb_root'] = dirname(__FILE__, 2);
 
 $ignore_host_reg = "";
 
@@ -35,7 +35,7 @@ if ( isset($_GET['ignore_host_reg'])  ) {
 
 # Massage the metrics to minimize the cache file by caching only attributes
 # we care about
-$stuck_gmond_hosts = array();
+$stuck_gmond_hosts = [];
 foreach ( $metrics as $mhost => $host_metrics ) {
     # 
     if ( $ignore_host_reg != "" and preg_match("/" .$ignore_host_reg . "/", $mhost) ) {

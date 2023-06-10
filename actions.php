@@ -61,7 +61,7 @@ if ( isset($_GET['action']) && $_GET['action'] == "show_views" ) {
     <select onChange="addItemToView()" name="vn">
     <option value="none">Please choose a view to add to</option>
     <?php
-    $sorted_views = array();
+    $sorted_views = [];
     foreach ($available_views as $view) {
       $sorted_views[viewName($view)] = $view;
     }

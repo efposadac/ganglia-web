@@ -8,7 +8,6 @@ include_once "./functions.php";
 include_once "./get_context.php";
 include_once "./ganglia.php";
 include_once "./get_ganglia.php";
-include_once "./dwoo/dwooAutoload.php";
 
 if ($refresh) {
   try {
@@ -22,8 +21,8 @@ if ($refresh) {
 }
 
 function get_picker_metrics($metrics, $reports, $gweb_root, $graph_engine) {
-  $context_metrics = array();
-  if (count($metrics)) {
+  $context_metrics = [];
+  if (is_countable($metrics) ? count($metrics) : 0) {
     foreach ($metrics as $host_metrics) {
       foreach ($host_metrics as $metric_name => $metric_value) {
 	$context_metrics[$metric_name] = rawurldecode($metric_name);
@@ -36,7 +35,7 @@ function get_picker_metrics($metrics, $reports, $gweb_root, $graph_engine) {
   if (!is_array($context_metrics))
     return NULL;
 
-  $picker_metrics = array();
+  $picker_metrics = [];
 
   // Find all the optional reports
   if ($handle = opendir($gweb_root . '/graph.d')) {
@@ -90,7 +89,7 @@ function get_load_pie($showhosts,
 		      $name,
 		      $tpl_data) {
   if ($showhosts != 0) {
-    $percent_hosts = array();
+    $percent_hosts = [];
     foreach ($hosts_up as $host => $val) {
       // If host_regex is defined
       if (isset($user['host_regex']) &&
@@ -106,7 +105,7 @@ function get_load_pie($showhosts,
       }
     }
 
-    $num_hosts_down = count($hosts_down);
+    $num_hosts_down = is_countable($hosts_down) ? count($hosts_down) : 0;
     if ($num_hosts_down > 0)
       $percent_hosts[load_color(-1)] = $num_hosts_down;
 
@@ -155,8 +154,10 @@ function get_host_metric_graphs($showhosts,
                                 $ce,
                                 $vlabel,
 			        $tpl_data) {
-  $sorted_hosts = array();
-  $down_hosts = array();
+  $rrd_options = null;
+  $sorted_list = [];
+  $sorted_hosts = [];
+  $down_hosts = [];
 
   if ($showhosts == 0)
     return;
@@ -213,7 +214,7 @@ function get_host_metric_graphs($showhosts,
     if ($ce and (is_numeric($ce) or strtotime($ce)))
       $end = $ce;
 
-    list($min, $max) = find_limits($clustername,
+    [$min, $max] = find_limits($clustername,
 				   $sorted_hosts,
 				   $metricname,
 				   $start,
@@ -227,12 +228,12 @@ function get_host_metric_graphs($showhosts,
   $i = 1;
 
   // Initialize overflow list
-  $overflow_list = array();
+  $overflow_list = [];
   $overflow_counter = 1;
 
   $cluster_url = rawurlencode($clustername);
 
-  $size = isset($clustergraphsize) ? $clustergraphsize : 'small';
+  $size = $clustergraphsize ?? 'small';
   if ($conf['hostcols'] == 0) // enforce small size in multi-host report
     $size = 'small';
 
@@ -311,7 +312,7 @@ function get_host_metric_graphs($showhosts,
     if (isset($vlabel))
       $graphargs .= "&amp;vl=" . urlencode($vlabel);
 
-    $host_item = array();
+    $host_item = [];
     $host_item['name'] = $host;
     $host_item['host_link'] = $host_link;
     $host_item['textval'] = $textval;
@@ -334,7 +335,7 @@ function get_host_metric_graphs($showhosts,
 
   // If there is an overflow list. These are hosts for which we don't
   // show graphs just names
-  $overflow = array();
+  $overflow = [];
   $overflow['list'] = $overflow_list;
   $overflow['count'] = count($overflow_list);
   $tpl_data->assign("overflow", $overflow);
@@ -349,7 +350,7 @@ function get_cluster_overview($showhosts,
   $cpu_num = !$showhosts ? $metrics["cpu_num"]['SUM'] :
     cluster_sum("cpu_num", $metrics);
 
-  $overview = array();
+  $overview = [];
 
   $overview["cpu_num"] = $cpu_num;
 
@@ -362,8 +363,8 @@ function get_cluster_overview($showhosts,
   if (!$cpu_num)
     $cpu_num = 1;
 
-  $cluster_load = array();
-  foreach (array("load_fifteen", "load_five", "load_one") as $load_metric) {
+  $cluster_load = [];
+  foreach (["load_fifteen", "load_five", "load_one"] as $load_metric) {
     $load_sum = !$showhosts ? $metrics[$load_metric]['SUM'] :
       cluster_sum($load_metric, $metrics);
     $cluster_load[] = sprintf("%.0f%%",
@@ -410,12 +411,11 @@ function get_cluster_optional_reports($clustername,
   # First we find out what the default (site-wide) reports are then look
   # for host specific included or excluded reports
   ##############################################################################
-  $default_reports = array("included_reports" => array(),
-                           "excluded_reports" => array());
+  $default_reports = ["included_reports" => [], "excluded_reports" => []];
   if (is_file($conf_dir . "/default.json")) {
     $default_reports = array_merge(
       $default_reports,
-      json_decode(file_get_contents($conf_dir . "/default.json"), TRUE));
+      json_decode(file_get_contents($conf_dir . "/default.json"), TRUE, 512, JSON_THROW_ON_ERROR));
   }
 
   $cluster_file = $conf_dir .
@@ -423,26 +423,25 @@ function get_cluster_optional_reports($clustername,
     str_replace(" ", "_", $clustername) .
     ".json";
 
-  $override_reports = array("included_reports" => array(),
-			    "excluded_reports" => array());
+  $override_reports = ["included_reports" => [], "excluded_reports" => []];
   if (is_file($cluster_file)) {
     $override_reports =
       array_merge($override_reports,
-		  json_decode(file_get_contents($cluster_file), TRUE));
+		  json_decode(file_get_contents($cluster_file), TRUE, 512, JSON_THROW_ON_ERROR));
   }
 
   # Merge arrays
-  foreach (array('included_reports', 'excluded_reports') as $report_type) {
+  foreach (['included_reports', 'excluded_reports'] as $report_type) {
     $reports[$report_type] =
       array_merge($default_reports[$report_type],
                   $override_reports[$report_type]);
     $reports[$report_type] = array_unique($reports[$report_type]);
   }
 
-  $optional_reports = array();
+  $optional_reports = [];
   foreach ($reports["included_reports"] as $report_name ) {
     if (! in_array( $report_name, $reports["excluded_reports"])) {
-      $report = array();
+      $report = [];
       $report['name'] = $report_name;
       $report['graph_args'] = $graph_args;
       $report['zoom_support'] = $zoom_support;
@@ -453,7 +452,7 @@ function get_cluster_optional_reports($clustername,
   $tpl_data->assign("optional_reports", $optional_reports);
 
 
-  $tpl_optional_graphs = array();
+  $tpl_optional_graphs = [];
   if (isset($optional_graphs)) {
     foreach ($optional_graphs as $g) {
       $tpl_optional_graphs[$g]['name'] = $g;
@@ -484,6 +483,7 @@ function show_stacked_graphs($clustername,
 }
 
 function get_load_heatmap($hosts_up, $host_regex, $metrics, $load_scale, $tpl_data, $sort) {
+  $host_load = [];
   foreach ($hosts_up as $host => $val) {
   // If host_regex is defined
   if (isset($host_regex) &&
@@ -558,9 +558,9 @@ function get_load_heatmap($hosts_up, $host_regex, $metrics, $load_scale, $tpl_da
 }
 
 $fn = "cluster_" . ($refresh ? "refresh" : "view") . ".tpl";
-$tpl = new Dwoo_Template_File(template($fn));
+$tpl = new Dwoo\Template\File(template($fn));
 
-$tpl_data = new Dwoo_Data();
+$tpl_data = new Dwoo\Data();
 
 if (! $refresh) {
   $tpl_data->assign(
@@ -614,7 +614,7 @@ if (! $refresh) {
                                $user['ce'],
                                $conf['zoom_support'],
                                $conf['default_optional_graph_size'],
-                               $cluster[LOCALTIME],
+                               $cluster['LOCALTIME'],
                                $tpl_data);
 
   //////////////////////////////////////////////////////////////////////////////
@@ -637,9 +637,7 @@ if (! $refresh) {
   $tpl_data->assign("sort", $user['sort']);
   $tpl_data->assign("range", $user['range']);
 
-  $showhosts_levels = array(2 => array('checked' => '', 'name' => 'Auto'),
-                            1 => array('checked' => '', 'name' => 'Same'),
-                            0 => array('checked' => '', 'name' => 'None'));
+  $showhosts_levels = [2 => ['checked' => '', 'name' => 'Auto'], 1 => ['checked' => '', 'name' => 'Same'], 0 => ['checked' => '', 'name' => 'None']];
   $showhosts_levels[$user['showhosts']]['checked'] = 'checked';
   $tpl_data->assign("showhosts_levels", $showhosts_levels);
 
@@ -658,7 +656,7 @@ if (! $refresh) {
   // for a long time. For those cases we have the ability to display
   // only the max amount of graphs and put place holders for the rest ie.
   // it will say only print host name without an image
-  $max_graphs_options = array(1000,500,200,100,50,25,20,15,10);
+  $max_graphs_options = [1000, 500, 200, 100, 50, 25, 20, 15, 10];
 
   if (isset($user['max_graphs']) && is_numeric($user['max_graphs']))
     $max_graphs = $user['max_graphs'];
@@ -693,7 +691,7 @@ if (! $refresh) {
   //////////////////////////////////////////////////////////////////////////////
 }
 
-if ((count($hosts_up) == 0) ||
+if (((is_countable($hosts_up) ? count($hosts_up) : 0) == 0) ||
     !(isset($conf['heatmaps_enabled']) and $conf['heatmaps_enabled'] == 1))
   get_load_pie($user['showhosts'],
 	       $hosts_up,
@@ -709,8 +707,8 @@ if ($user['showhosts'] != 0)
   get_host_metric_graphs($user['showhosts'],
 			 $hosts_up,
 			 $hosts_down,
-			 isset($user['host_regex']) ? $user['host_regex'] : NULL,
-			 isset($user['max_graphs']) ? $user['max_graphs'] : $conf['max_graphs'],
+			 $user['host_regex'] ?? NULL,
+			 $user['max_graphs'] ?? $conf['max_graphs'],
 			 $conf,
 			 $metrics,
 			 $user['metricname'],
@@ -734,7 +732,7 @@ if ($user['showhosts'] != 0)
 ///////////////////////////////////////////////////////////////////////////////
 if (isset($conf['heatmaps_enabled']) and
     $conf['heatmaps_enabled'] == 1 and
-    (count($hosts_up) > 0))
+    ((is_countable($hosts_up) ? count($hosts_up) : 0) > 0))
   get_load_heatmap($hosts_up, $user['host_regex'], $metrics, $conf['load_scale'], $tpl_data, $user['sort']);
 
 $tpl_data->assign("conf", $conf);
@@ -749,7 +747,7 @@ $tpl_data->assign("hostcols", $conf['hostcols']);
 
 // No reason to go on if we are not displaying individual hosts
 if (!is_array($hosts_up) or !$user['showhosts']) {
-  $dwoo->output($tpl, $tpl_data);
+  $dwoo->get($tpl, $tpl_data);
   return;
 }
 
@@ -762,7 +760,7 @@ if (isset($conf['show_stacked_graphs']) and
   show_stacked_graphs($user['clustername'],
 		      $user['metricname'],
 		      $user['range'],
-		      $cluster[LOCALTIME],
+		      $cluster['LOCALTIME'],
 		      $user['host_regex'],
 		      $user['cs'],
 		      $user['ce'],
@@ -780,5 +778,5 @@ if ($conf['picker_autocomplete'] == true) {
     $tpl_data->assign("picker_metrics", join("", $picker_metrics));
 }
 
-$dwoo->output($tpl, $tpl_data);
+echo $dwoo->get($tpl, $tpl_data);
 ?>

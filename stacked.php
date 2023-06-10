@@ -5,7 +5,7 @@
 //////////////////////////////////////////////////////////////////////////////
 session_start();
 
-$conf['gweb_root'] = dirname(__FILE__);
+$conf['gweb_root'] = __DIR__;
 
 include_once $conf['gweb_root'] . "/eval_conf.php";
 include_once $conf['gweb_root'] . "/functions.php";
@@ -30,20 +30,19 @@ if (isset($_SESSION['tz']) && ($_SESSION['tz'] != ''))
   $command .= "TZ='" . sanitize($_SESSION['tz']) . "' ";
 
 $command .= $conf['rrdtool'] . " graph - $rrd_options -E";
-$command .= " --start '" . sanitize(${start}) . "'";
-$command .= " --end '" . sanitize(${end}) . "'";
+$command .= " --start '" . sanitize($start) . "'";
+$command .= " --end '" . sanitize($end) . "'";
 $command .= " --width 700";
 $command .= " --height 300";
 
-$title .= isset($_GET['title']) ?
-  $_GET['title'] : "$clustername aggregated $metricname last $range";
+$title .= $_GET['title'] ?? "$clustername aggregated $metricname last $range";
 $command .= " --title " . sanitize($title);
 
 if (isset($_GET['x']))
-  $command .= " --upper-limit " . sanitize($_GET[x]);
+  $command .= " --upper-limit " . sanitize($_GET[\X]);
 
 if (isset($_GET['n']))
-  $command .= " --lower-limit " . sanitize($_GET[n]);
+  $command .= " --lower-limit " . sanitize($_GET[\N]);
 
 if (isset($_GET['x']) || isset($_GET['n'])) {
   $command .= " --rigid";
@@ -66,7 +65,7 @@ retrieve_metrics_cache();
 #####################################################################
 # Keep track of maximum host length so we can neatly stack metrics
 $max_len = 0;
-$hosts = array();
+$hosts = [];
 foreach ($index_array['cluster'] as $host => $cluster_array ) {
   foreach ($cluster_array as $cluster) {
     // Check cluster name
@@ -172,7 +171,7 @@ function HSV_TO_RGB ($H, $S, $V) {
       $var_G = $var_1;
       $var_B = $var_2;
     } else {
-      return array(255, 255, 255);
+      return [255, 255, 255];
     }
 
     $R = $var_R * 255;
@@ -180,11 +179,11 @@ function HSV_TO_RGB ($H, $S, $V) {
     $B = $var_B * 255;
   }
 
-  return array($R, $G, $B);
+  return [$R, $G, $B];
 }
 
 function get_col($value) {
-  list($r, $g, $b) = HSV_TO_RGB($value, 1, 0.9);
+  [$r, $g, $b] = HSV_TO_RGB($value, 1, 0.9);
 
   return sprintf('%02X%02X%02X', $r, $g, $b);
 }

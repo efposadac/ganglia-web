@@ -1,0 +1,11 @@
+{
+    "name": "ganglia/ganglia-web",
+    "authors": [
+        {
+            "name": "The Ganglia Team"
+        }
+    ],
+    "require": {
+        "intellishop/dwooeight": "^1.0"
+    }
+}

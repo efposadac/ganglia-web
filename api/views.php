@@ -2,7 +2,7 @@
 
 header("Content-Type: text/json");
 
-$conf['gweb_root'] = dirname(dirname(__FILE__));
+$conf['gweb_root'] = dirname(__FILE__, 2);
 
 include_once $conf['gweb_root'] . "/eval_conf.php";
 include_once $conf['gweb_root'] . "/functions.php";
@@ -33,13 +33,13 @@ switch ( $_GET['action'] ) {
     }
     $view_suffix = str_replace(" ", "_", $_GET['view_name']);
     $view_filename = $conf['views_dir'] . "/view_" . $view_suffix . ".json";
-    $this_view = json_decode(file_get_contents($view_filename), TRUE);
+    $this_view = json_decode(file_get_contents($view_filename), TRUE, 512, JSON_THROW_ON_ERROR);
     api_return_ok($this_view);
     break; // end get
 
   case 'list':
     $views = get_available_views();
-    $view_list = array();
+    $view_list = [];
     foreach ($views as $k => $view) {
       if ($view['view_name'] != '') $view_list[] = $view['view_name'];
     }
@@ -64,11 +64,10 @@ switch ( $_GET['action'] ) {
     if ( $view_exists == 1 ) {
       api_return_error("View with the name ".$_GET['view_name']." already exists.");
     } else {
-      $empty_view = array ( "view_name" => $_GET['view_name'],
-        "items" => array() );
+      $empty_view = ["view_name" => $_GET['view_name'], "items" => []];
       $view_suffix = str_replace(" ", "_", $_GET['view_name']);
       $view_filename = $conf['views_dir'] . "/view_" . $view_suffix . ".json";
-      $json = json_encode($empty_view);
+      $json = json_encode($empty_view, JSON_THROW_ON_ERROR);
       if ( file_put_contents($view_filename, json_prettyprint($json)) === FALSE ) {
         api_return_error("Can't write to file $view_filename. Perhaps permissions are wrong.");
       } else {
@@ -141,14 +140,12 @@ switch ( $_GET['action'] ) {
       if ( isset($_GET['aggregate']) ) {
 
 	  foreach ( $_GET['mreg'] as $key => $value ) 
-	    $metric_regex_array[] = array("regex" => $value);
+	    $metric_regex_array[] = ["regex" => $value];
 
 	  foreach ( $_GET['hreg'] as $key => $value ) 
-	    $host_regex_array[] = array("regex" => $value);
+	    $host_regex_array[] = ["regex" => $value];
 
-	  $item_array = array( "aggregate_graph" => "true", "metric_regex" => $metric_regex_array, 
-	    "host_regex" => $host_regex_array, "graph_type" => $_GET['gtype'],
-	    "vertical_label" => $_GET['vl'], "title" => $_GET['title']);
+	  $item_array = ["aggregate_graph" => "true", "metric_regex" => $metric_regex_array, "host_regex" => $host_regex_array, "graph_type" => $_GET['gtype'], "vertical_label" => $_GET['vl'], "title" => $_GET['title']];
 
           if ( isset($_GET['x']) && is_numeric($_GET['x'])) {
             $item_array["upper_limit"] = $_GET['x'];
@@ -162,18 +159,18 @@ switch ( $_GET['action'] ) {
 
       } else {
 	if ( $_GET['type'] == "metric" ) {
-          $items = array( "hostname" => $_GET['host_name'], "metric" => $_GET['metric_name'] );
+          $items = ["hostname" => $_GET['host_name'], "metric" => $_GET['metric_name']];
 	  if (isset($_GET['vertical_label']))
               $items["vertical_label"] = $_GET['vertical_label'];
 	  if (isset($_GET['title']))
               $items["title"] = $_GET['title'];
 	  $view['items'][] = $items;
 	} else
-	  $view['items'][] = array( "hostname" => $_GET['host_name'], "graph" => $_GET['metric_name']);
+	  $view['items'][] = ["hostname" => $_GET['host_name'], "graph" => $_GET['metric_name']];
 
       }
 
-      $json = json_encode($view);
+      $json = json_encode($view, JSON_THROW_ON_ERROR);
 
       if ( file_put_contents($view_filename, json_prettyprint($json)) === FALSE ) {
         api_return_error("Can't write to file $view_filename. Perhaps permissions are wrong.");

@@ -16,7 +16,7 @@
 #  ?hreg=apache\tomcat&checks=svn_revision
 #
 ##########################################################################################
-$conf['ganglia_dir'] = dirname(dirname(__FILE__));
+$conf['ganglia_dir'] = dirname(__FILE__, 2);
 
 include_once $conf['ganglia_dir'] . "/eval_conf.php";
 include_once $conf['ganglia_dir'] . "/functions.php";
@@ -77,12 +77,12 @@ if ( ! is_array( $metrics ) ) {
 # Get a list of all hosts
 $ganglia_hosts_array = array_keys($metrics);
 
-$results_ok = array();
-$results_notok = array();
+$results_ok = [];
+$results_notok = [];
 
 # Initialize results array
 foreach ( $check_metrics as $index => $metric_name ) {
-  $results[$metric_name]["values"] = array();
+  $results[$metric_name]["values"] = [];
 }
 
 
@@ -121,14 +121,14 @@ $ok=true;
 $output = "";
 
 foreach ( $results as $metric_name => $metrics_results ) {
-  if ( count($metrics_results["values"]) > 1 ) {
+  if ( (is_countable($metrics_results["values"]) ? count($metrics_results["values"]) : 0) > 1 ) {
     $ok=false;
     $output .= " CRIT " . $metric_name . " differs values => ";
     foreach ( $metrics_results["values"] as $index => $value ) {
       $output .= $value . " ( "  . join(",", $metrics_results["members"][$index]) . " ) ";
     }
   } else {
-    $output .= ", " .$metric_name . " same => " . count($metrics_results["members"][0]) . " nodes";
+    $output .= ", " .$metric_name . " same => " . (is_countable($metrics_results["members"][0]) ? count($metrics_results["members"][0]) : 0) . " nodes";
   }
 }
 
