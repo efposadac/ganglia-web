@@ -747,7 +747,7 @@ $tpl_data->assign("hostcols", $conf['hostcols']);
 
 // No reason to go on if we are not displaying individual hosts
 if (!is_array($hosts_up) or !$user['showhosts']) {
-  $dwoo->get($tpl, $tpl_data);
+  echo $dwoo->get($tpl, $tpl_data);
   return;
 }
 

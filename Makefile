@@ -2,7 +2,7 @@
 # User configurables:
 ##########################################################
 # Location where gweb should be installed to (excluding conf, dwoo dirs).
-GDESTDIR = /opt/ganglia-web
+GDESTDIR = /usr/share/ganglia-webfrontend
 
 # Location where default apache configuration should be installed to.
 GCONFDIR = /etc/ganglia-web

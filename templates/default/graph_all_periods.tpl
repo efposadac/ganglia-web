@@ -122,7 +122,7 @@
   {/if}
 
   {foreach $conf['time_ranges'] key value}
-    {if $value != 'job'}
+    {if $key != 'job'}
       <div class="img_view">
         {$graphId = cat($GRAPH_BASE_ID $key)}
 
