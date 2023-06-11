@@ -3,9 +3,8 @@ require __DIR__ . '/vendor/autoload.php';
 include_once "./eval_conf.php";
 include_once "./global.php";
 include_once "./functions.php";
-// include_once "./dwoo/dwooAutoload.php";
 
-$tpl = new Dwoo\Template\File(template("graph_all_periods.tpl"));
+$tpl = new Dwoo\Template\File( template("graph_all_periods.tpl") );
 $data = new Dwoo\Data();
 
 $data->assign("refresh", $conf['default_refresh']);
@@ -43,8 +42,6 @@ foreach ($_GET as $key => $value) {
 // If we are in the mobile mode set the proper graph sizes
 $data->assign("largesize", isset($_GET['mobile']) ? "mobile" : "large");
 $data->assign("xlargesize", isset($_GET['mobile']) ? "mobile" : "xlarge");
-
-print_r($_GET);
 
 // Join all the query_string arguments
 $query_string = join("&amp;", $query_string_array);
@@ -112,7 +109,7 @@ if ($conf['graph_engine'] == 'flot') {
 
 if (!isset($dwoo)) {
   try {
-    $dwoo = new Dwoo($conf['dwoo_compiled_dir'], $conf['dwoo_cache_dir']);
+    $dwoo = new Dwoo\Core($conf['dwoo_compiled_dir'], $conf['dwoo_cache_dir']);
   } catch (Exception $e) {
     print
       "<H4>There was an error initializing the Dwoo PHP Templating Engine: ".

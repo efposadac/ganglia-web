@@ -1,6 +1,6 @@
 <?php
 $refresh = isset($_GET['refresh']);
-
+require __DIR__ . '/vendor/autoload.php';
 include_once "./eval_conf.php";
 // ATD - function.php must be included before get_context.php.
 // It defines some needed functions.
@@ -11,7 +11,7 @@ include_once "./get_ganglia.php";
 
 if ($refresh) {
   try {
-    $dwoo = new Dwoo($conf['dwoo_compiled_dir'], $conf['dwoo_cache_dir']);
+    $dwoo = new Dwoo\Core($conf['dwoo_compiled_dir'], $conf['dwoo_cache_dir']);
   } catch (Exception $e) {
     print "<H4>There was an error initializing the Dwoo PHP Templating Engine: " .
       $e->getMessage() .

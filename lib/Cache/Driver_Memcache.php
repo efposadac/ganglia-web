@@ -13,7 +13,7 @@ function g_cache_serialize($data) {
 	$mc->set( 'ganglia_cache_timestamp_' . gethostname(), time() );
 } // end function g_cache_serialize
 
-function g_cache_deserialize() {
+function g_cache_deserialize($index) {
 	global $conf;
 	$mc = g_get_memcache();
 	$index_array = $mc->get( 'ganglia_cache_' . gethostname() );

@@ -39,10 +39,10 @@ $title .= $_GET['title'] ?? "$clustername aggregated $metricname last $range";
 $command .= " --title " . sanitize($title);
 
 if (isset($_GET['x']))
-  $command .= " --upper-limit " . sanitize($_GET[\X]);
+  $command .= " --upper-limit " . sanitize($_GET['x']);
 
 if (isset($_GET['n']))
-  $command .= " --lower-limit " . sanitize($_GET[\N]);
+  $command .= " --lower-limit " . sanitize($_GET['n']);
 
 if (isset($_GET['x']) || isset($_GET['n'])) {
   $command .= " --rigid";

@@ -1222,7 +1222,7 @@ function retrieve_metrics_cache ( $index = "all" ) {
 
    global $conf, $index_array, $hosts, $grid, $clusters, $debug, $metrics, $context;
 
-   $index; // PHPCS
+  //  $index; // PHPCS
    require __DIR__ . '/lib/cache.php';
    return;
 } // end of function get_metrics_cache () {

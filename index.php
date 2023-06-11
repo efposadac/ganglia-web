@@ -8,7 +8,6 @@ include_once "./ganglia.php";
 include_once "./get_ganglia.php";
 
 $resource = GangliaAcl::ALL_CLUSTERS;
-print("CONTEXT: $context");
 
 if( $context == "grid" ) {
   $resource = $grid;
@@ -48,7 +47,6 @@ if ($context == "meta" or $context == "control") {
          $title = "$clustername Report";}
       else
          $title = "$clustername Cluster Report";
-
       include_once "./header.php";
       include_once "./cluster_view.php";
 } else if ($context == "physical") {
