@@ -11,7 +11,6 @@
 $gweb_root = __DIR__;
 
 include_once($gweb_root . "/version.php");
-include_once($gweb_root . "/global.php");
 
 $error="";
 
@@ -328,7 +327,9 @@ function end_all ($parser, $tagname) {
 
 
 function Gmetad (){
-   global $conf, $error, $parsetime, $clustername, $hostname, $context, $debug, $SKIP_GMETAD_CONTEXTS;
+   global $conf, $error, $parsetime, $clustername, $hostname, $context, $debug;
+
+   $SKIP_GMETAD_CONTEXTS = ["compare_hosts", "decompose_graph", "views"];
 
    if ($debug) print "<br/>\n";
    # Parameters are optionalshow
